@@ -333,7 +333,7 @@ export default function ProductDetailModal({
             <div className="w-full flex justify-between items-start gap-4">
               <div className="space-y-1 flex-1">
                 <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-semibold text-neutral-400 block">{product.category} Supplement</span>
-                <h2 className="text-xl sm:text-2xl font-bold font-sans text-neutral-900 leading-tight tracking-tight font-sans">
+                <h2 className="text-xl sm:text-2xl font-bold font-display text-neutral-900 leading-tight tracking-tight">
                   {product.brand} {product.name}
                 </h2>
               </div>
@@ -364,14 +364,14 @@ export default function ProductDetailModal({
             {/* Premium Price Bracket */}
             <div className="space-y-1 bg-neutral-50/50 p-4.5 rounded-xl border border-neutral-100">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-neutral-950 tracking-tight font-sans">
+                <span className="text-3xl font-black text-neutral-950 tracking-tight font-geometric">
                   Rs {product.price.toLocaleString()}
                 </span>
               </div>
               
               {product.originalPrice && (
                 <div className="flex items-center gap-2.5 text-xs text-neutral-500">
-                  <span>Marked Price Rs {product.originalPrice.toLocaleString()}</span>
+                  <span className="font-geometric">Marked Price Rs {product.originalPrice.toLocaleString()}</span>
                   <span className="text-emerald-600 font-bold ml-1.5 text-sm">
                     {calculatedDiscount}% OFF
                   </span>
@@ -456,7 +456,7 @@ export default function ProductDetailModal({
                 {product.originalPrice > product.price && (
                   <div className="flex justify-between items-center text-emerald-600 font-sans font-semibold text-[11px]">
                     <span>Discounted Savings</span>
-                    <span className="font-mono bg-emerald-55/10 border border-emerald-150 px-2 py-0.5">
+                    <span className="font-geometric bg-emerald-55/10 border border-emerald-150 px-2 py-0.5">
                       - Rs. {(product.originalPrice - product.price).toLocaleString()}
                     </span>
                   </div>
@@ -464,7 +464,7 @@ export default function ProductDetailModal({
                 <div className="flex justify-between items-center text-neutral-900 font-sans font-bold border-t border-dashed border-[#1A1A1A]/10 pt-2 text-sm mt-1">
                   <span>Actual Net Total</span>
                   <div className="text-right">
-                    <span className="font-sans font-black text-neutral-950 text-base">
+                    <span className="font-geometric font-black text-neutral-950 text-base">
                       Rs. {product.price.toLocaleString()}
                     </span>
                     <span className="text-[10px] text-gray-400 block font-mono">excluding delivery fee</span>
@@ -485,7 +485,7 @@ export default function ProductDetailModal({
                   }
                   onClose();
                 }}
-                className="w-full py-3.5 bg-white hover:bg-neutral-50 text-neutral-900 border-2 border-neutral-950 font-bold rounded-lg text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3 bg-white hover:bg-neutral-50 text-neutral-900 border-2 border-neutral-950 font-quattrocento font-extrabold rounded-lg text-sm sm:text-base uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 BUY NOW
               </button>
@@ -932,11 +932,11 @@ export default function ProductDetailModal({
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md p-3 px-4 border-t border-neutral-200 flex items-center justify-between gap-4 shadow-[0_-5px_15px_rgba(0,0,0,0.06)] animate-slide-up select-none">
         <div className="flex flex-col text-left">
           <span className="text-[9px] text-neutral-400 uppercase font-mono tracking-wider">Net Amount</span>
-          <span className="text-sm font-black text-neutral-950 font-sans">
+          <span className="text-sm font-black text-neutral-950 font-geometric">
             Rs. {(product.price * quantity).toLocaleString()}
           </span>
           {product.originalPrice > product.price && (
-            <span className="text-[8px] bg-emerald-50 border border-emerald-150 text-emerald-700 px-1 py-0.5 rounded-none font-bold uppercase block w-fit mt-0.5 animate-pulse">
+            <span className="text-[8px] bg-emerald-55/10 border border-emerald-150 text-emerald-700 px-1 py-0.5 rounded-none font-bold uppercase block w-fit mt-0.5 animate-pulse font-geometric">
               Save Rs. {((product.originalPrice - product.price) * quantity).toLocaleString()}
             </span>
           )}
@@ -972,7 +972,7 @@ export default function ProductDetailModal({
                   }
                   onClose();
                 }}
-                className="flex-[1.2] bg-[#FFCD00] hover:bg-[#E2B600] text-black hover:text-black hover:shadow-md transition-all py-2.5 px-3 rounded-lg text-xs font-extrabold uppercase tracking-wider text-center cursor-pointer"
+                className="flex-[1.2] bg-[#FFCD00] hover:bg-[#E2B600] text-black hover:text-black hover:shadow-md transition-all py-2.5 px-3 rounded-lg text-sm font-quattrocento font-extrabold uppercase tracking-wider text-center cursor-pointer"
               >
                 Buy Now
               </button>

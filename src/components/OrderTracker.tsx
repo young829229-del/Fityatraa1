@@ -327,7 +327,7 @@ export default function OrderTracker({ directSearchId, onClearDirectSearch }: Or
                     <Truck className="w-3.5 h-3.5 text-black" />
                     <span className="font-bold text-dense text-gray-900">{searchResult.shippingPartner}</span>
                   </div>
-                  <p className="font-mono text-[10px] text-gray-500 mt-0.5">COD Cash Collection: Rs. {searchResult.total.toLocaleString()}</p>
+                  <p className="font-mono text-[10px] text-gray-500 mt-0.5">COD Cash Collection: <span className="font-geometric font-bold">Rs. {searchResult.total.toLocaleString()}</span></p>
                 </div>
               </div>
 

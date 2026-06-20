@@ -25,6 +25,7 @@ export default function CartDrawer({
   const [activeOrderId, setActiveOrderId] = useState("");
   const [checkoutName, setCheckoutName] = useState("");
   const [checkoutPhone, setCheckoutPhone] = useState("");
+  const [checkoutAddress, setCheckoutAddress] = useState("");
   const [formError, setFormError] = useState("");
 
   // Calculate prices helper
@@ -54,6 +55,10 @@ export default function CartDrawer({
       setFormError("Please enter a valid Nepalese phone number.");
       return;
     }
+    if (!checkoutAddress.trim()) {
+      setFormError("Please tell us your exact location landmark.");
+      return;
+    }
 
     // Generate unique regional Nepalese order format ID
     const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -65,6 +70,8 @@ export default function CartDrawer({
       id: newId,
       name: checkoutName,
       phone: checkoutPhone,
+      address: checkoutAddress.trim(),
+      coordinates: null,
       region: shippingRegion,
       total: grandTotal,
       items: cart.map((item) => ({
@@ -93,6 +100,32 @@ export default function CartDrawer({
       console.error("Local storage order registration error", err);
     }
 
+    // Format WhatsApp Message & Auto-launch WhatsApp flow
+    const itemStrings = cart.map((item, idx) => `${idx + 1}. ${item.product.name} (Qty: ${item.quantity})`).join("\n");
+    
+    const waText = `🚨 *NEW FIT YATRA ORDER RECEIVED* 🚨
+
+*Order ID:* ${newId}
+*Customer Name:* ${checkoutName}
+*Contact Phone:* ${checkoutPhone}
+*Delivery Region:* ${activeRegion.name}
+*Exact Landmark:* ${checkoutAddress.trim()}
+*Total Amount:* Rs. ${grandTotal.toLocaleString()}
+
+*🛒 Order Items:*
+${itemStrings}
+
+---
+Sent via FitYatra Applet Dispatcher`;
+
+    const waUrl = `https://wa.me/9779705283444?text=${encodeURIComponent(waText)}`;
+    
+    try {
+      window.open(waUrl, "_blank");
+    } catch (e) {
+      console.warn("Popup blocked automatically forwarding order details directly", e);
+    }
+
     // Success state
     setShowCheckoutSuccess(true);
   };
@@ -105,9 +138,9 @@ export default function CartDrawer({
         onClick={onClose}
       />
 
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="absolute inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
         {/* Drawer panel */}
-        <div className="w-screen max-w-md bg-white shadow-editorial flex flex-col justify-between h-full relative border-l border-[#1A1A1A]/20">
+        <div className="w-full max-w-md bg-white shadow-editorial flex flex-col justify-between h-full relative border-l border-[#1A1A1A]/20">
           
           {/* Header Panel */}
           <div className="p-5 sm:p-6 border-b border-[#1A1A1A]/10 flex items-center justify-between bg-[#FAFAFA]">
@@ -126,92 +159,94 @@ export default function CartDrawer({
             </button>
           </div>
 
-          {/* Body List of items */}
-          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
-            {cart.length === 0 ? (
-              <div className="h-4/5 flex flex-col items-center justify-center text-center px-4 space-y-4">
-                <div className="w-16 h-16 rounded-none bg-[#FAFAFA] flex items-center justify-center text-gray-400 border border-[#1A1A1A]/10">
-                  <ShoppingBag className="w-6 h-6 text-[black]" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-serif font-black text-[#1A1A1A] uppercase tracking-wide">Your bag is empty</h3>
-                  <p className="text-xs text-gray-500 mt-1.5 max-w-xs leading-relaxed">
-                    Explore our top loved products and supplements to kickstart your physical progress today!
-                  </p>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="cursor-pointer px-6 py-2.5 bg-[#1A1A1A] hover:bg-[black] text-white rounded-none text-xs font-mono uppercase tracking-widest transition-colors"
-                >
-                  Start Shopping
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {cart.map((item) => (
-                  <div
-                    key={item.product.id}
-                    className="flex gap-3.5 p-3 rounded-none border border-[#1A1A1A]/10 hover:border-[#1A1A1A]/30 transition-colors bg-white relative"
-                  >
-                    {/* Clear Product Image */}
-                    <div 
-                      id={`cart-item-img-container-${item.product.id}`}
-                      className="w-16 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-[#1A1A1A]/10 p-1 overflow-hidden"
-                    >
-                      {item.product.image && item.product.image.startsWith("http") ? (
-                        <img 
-                          id={`cart-item-img-${item.product.id}`}
-                          src={item.product.image} 
-                          alt={item.product.name} 
-                          className="w-full h-full object-contain"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-8 h-12 bg-[#1A1A1A] border border-zinc-800 rounded shadow-xs relative flex flex-col justify-between p-0.5">
-                          <span className="text-[5px] text-[#FFCD00] text-center leading-none mt-1 font-bold uppercase">SUPP</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Meta info & Quantifier */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between gap-1.5">
-                        <h4 className="text-xs font-serif font-bold text-[#1A1A1A] truncate pr-2">
-                          {item.product.name}
-                        </h4>
-                        <button
-                          onClick={() => onRemoveItem(item.product.id)}
-                          className="cursor-pointer text-gray-300 hover:text-red-600 transition-colors"
-                          title="Remove item"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-gray-400 mt-0.5 font-mono">
-                        Rs. {item.product.price.toLocaleString()} each
-                      </p>
-
-                      {/* Quantity Display */}
-                      <div className="flex justify-between items-center mt-3 bg-neutral-50 px-2.5 py-1.5 border border-dashed border-neutral-200">
-                        <span className="text-[10px] uppercase font-mono font-bold text-emerald-600 block">
-                          Quantity: 1 (Client Quota)
-                        </span>
-                        <span className="text-xs font-sans font-extrabold text-[#1A1A1A]">
-                          Rs. {item.product.price.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
+          {/* Scrollable Container for both Items List and Checkout Map Forms */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Body List of items */}
+            <div className="p-5 sm:p-6 space-y-4">
+              {cart.length === 0 ? (
+                <div className="py-20 flex flex-col items-center justify-center text-center px-4 space-y-4">
+                  <div className="w-16 h-16 rounded-none bg-[#FAFAFA] flex items-center justify-center text-gray-400 border border-[#1A1A1A]/10">
+                    <ShoppingBag className="w-6 h-6 text-[black]" />
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div>
+                    <h3 className="text-sm font-serif font-black text-[#1A1A1A] uppercase tracking-wide">Your bag is empty</h3>
+                    <p className="text-xs text-gray-500 mt-1.5 max-w-xs leading-relaxed">
+                      Explore our top loved products and supplements to kickstart your physical progress today!
+                    </p>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="cursor-pointer px-6 py-2.5 bg-[#1A1A1A] hover:bg-[black] text-white rounded-none text-xs font-mono uppercase tracking-widest transition-colors mb-4"
+                  >
+                    Start Shopping
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div
+                      key={item.product.id}
+                      className="flex gap-3.5 p-3 rounded-none border border-[#1A1A1A]/10 hover:border-[#1A1A1A]/30 transition-colors bg-white relative"
+                    >
+                      {/* Clear Product Image */}
+                      <div 
+                        id={`cart-item-img-container-${item.product.id}`}
+                        className="w-16 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-[#1A1A1A]/10 p-1 overflow-hidden"
+                      >
+                        {item.product.image && item.product.image.startsWith("http") ? (
+                          <img 
+                            id={`cart-item-img-${item.product.id}`}
+                            src={item.product.image} 
+                            alt={item.product.name} 
+                            className="w-full h-full object-contain"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-8 h-12 bg-[#1A1A1A] border border-zinc-800 rounded shadow-xs relative flex flex-col justify-between p-0.5">
+                            <span className="text-[5px] text-[#FFCD00] text-center leading-none mt-1 font-bold uppercase">SUPP</span>
+                          </div>
+                        )}
+                      </div>
 
-          {/* Pricing Calculations and promo cards */}
-          {cart.length > 0 && (
-            <div className="p-5 sm:p-6 bg-[#FAFAFA] border-t border-[#1A1A1A]/10 space-y-4">
-              
-              {/* Local Nepal Shipping Region selector */}
+                      {/* Meta info & Quantifier */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between gap-1.5">
+                          <h4 className="text-xs font-display font-semibold text-[#1A1A1A] truncate pr-2">
+                            {item.product.name}
+                          </h4>
+                          <button
+                            onClick={() => onRemoveItem(item.product.id)}
+                            className="cursor-pointer text-gray-300 hover:text-red-650 transition-colors"
+                            title="Remove item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-0.5 font-geometric">
+                          Rs. {item.product.price.toLocaleString()} each
+                        </p>
+
+                        {/* Quantity Display */}
+                        <div className="flex justify-between items-center mt-3 bg-neutral-50 px-2.5 py-1.5 border border-dashed border-neutral-200">
+                          <span className="text-[10px] uppercase font-mono font-bold text-emerald-600 block">
+                            Quantity: 1 (Client Quota)
+                          </span>
+                          <span className="text-xs font-geometric font-extrabold text-[#1A1A1A]">
+                            Rs. {item.product.price.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Pricing Calculations and promo cards */}
+            {cart.length > 0 && (
+              <div className="p-5 sm:p-6 pb-20 sm:pb-24 bg-[#FAFAFA] border-t border-[#1A1A1A]/10 space-y-4">
+                
+                {/* Local Nepal Shipping Region selector */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest block flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-[black]" /> Choose Nepal Delivery Zone
@@ -236,7 +271,7 @@ export default function CartDrawer({
               <div className="space-y-2 text-xs text-gray-650 pt-3.5 border-t border-[#1A1A1A]/10 font-sans">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-mono">Rs. {itemsSubtotal.toLocaleString()}</span>
+                  <span className="font-geometric">Rs. {itemsSubtotal.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between">
@@ -246,38 +281,72 @@ export default function CartDrawer({
                       KTM FREE SHIPPING COUPON
                     </span>
                   ) : (
-                    <span className="font-mono">Rs. {shippingCost}</span>
+                    <span className="font-geometric">Rs. {shippingCost}</span>
                   )}
                 </div>
                 
                 {/* GRAND TOTAL */}
                 <div className="flex justify-between text-sm font-black text-gray-900 border-t border-[#1A1A1A]/10 pt-3">
                   <span className="font-serif italic font-bold">Grand Total</span>
-                  <span className="text-base text-[#1A1A1A] font-serif font-black">Rs. {grandTotal.toLocaleString()}</span>
+                  <span className="text-base text-[#1A1A1A] font-geometric font-black">Rs. {grandTotal.toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Checkout Form & Button */}
-              <div className="pt-2">
-                <form onSubmit={handleCheckoutSubmit} className="space-y-2 mb-3">
-                  <div className="grid grid-cols-2 gap-2">
+              <div className="pt-2 border-t border-[#1A1A1A]/10 mt-3 pt-3">
+                <span className="text-[10px] font-mono uppercase tracking-[0.15em] font-bold text-black block mb-3 bg-[#FAF9F6] border border-[#1A1A1A]/10 px-3 py-1.5 text-center">
+                  ✍️ Delivery Destination & Contact Details
+                </span>
+                <form onSubmit={handleCheckoutSubmit} className="space-y-4 mb-3">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-mono uppercase tracking-wider text-gray-500 block font-bold">
+                          Your Full Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Rajesh Hamal"
+                          value={checkoutName}
+                          onChange={(e) => setCheckoutName(e.target.value)}
+                          className="w-full p-2.5 bg-white border border-[#1A1A1A]/20 rounded-none text-xs focus:outline-none focus:border-[black]"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-mono uppercase tracking-wider text-neutral-900 block font-bold flex justify-between">
+                          <span>Mobile Number <span className="text-red-500">*</span></span>
+                          <span className="text-[8px] text-gray-400 lowercase font-normal">(Nepal)</span>
+                        </label>
+                        <input
+                          type="tel"
+                          placeholder="Write Mobile Number here"
+                          value={checkoutPhone}
+                          onChange={(e) => setCheckoutPhone(e.target.value)}
+                          className="w-full p-2.5 bg-white border-2 border-black rounded-none text-xs focus:outline-none focus:ring-0 font-semibold placeholder:text-gray-400"
+                          title="Enter your 10-digit Nepalese mobile number"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[9px] font-mono text-gray-400 mt-0.5 leading-none">
+                      🔒 Your mobile number will be used to send your live Order Dispatch tracking link & details.
+                    </p>
+                  </div>
+
+                  {/* Manual Landmark Address Entry */}
+                  <div className="space-y-1">
                     <input
                       type="text"
-                      placeholder="My Full Name"
-                      value={checkoutName}
-                      onChange={(e) => setCheckoutName(e.target.value)}
-                      className="p-2.5 bg-white border border-[#1A1A1A]/20 rounded-none text-xs focus:outline-none focus:border-[black]"
-                      required
-                    />
-                    <input
-                      type="tel"
-                      placeholder="e.g. 98510..."
-                      value={checkoutPhone}
-                      onChange={(e) => setCheckoutPhone(e.target.value)}
-                      className="p-2.5 bg-white border border-[#1A1A1A]/20 rounded-none text-xs focus:outline-none focus:border-[black]"
+                      placeholder="Tell Your Exact Location / Landmark (e.g. Near Kalimati Bridge)"
+                      value={checkoutAddress}
+                      onChange={(e) => setCheckoutAddress(e.target.value)}
+                      className="w-full p-2.5 bg-white border border-[#1A1A1A]/20 rounded-none text-xs focus:outline-none focus:border-[black] font-sans"
                       required
                     />
                   </div>
+
                   {formError && (
                     <p className="text-[10px] font-mono text-xs font-semibold text-red-650 m-0">{formError}</p>
                   )}
@@ -301,6 +370,7 @@ export default function CartDrawer({
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
@@ -326,8 +396,12 @@ export default function CartDrawer({
                 <span className="text-[#1A1A1A] capitalize truncate max-w-[160px]">{activeRegion.name}</span>
               </div>
               <div className="flex justify-between">
+                <span>Specific Landmark</span>
+                <span className="text-[#1A1A1A] truncate max-w-[160px]">{checkoutAddress || "Specified"}</span>
+              </div>
+              <div className="flex justify-between">
                 <span>Total Amount Due</span>
-                <span className="font-sans text-[black] font-black">Rs. {grandTotal.toLocaleString()}</span>
+                <span className="font-geometric text-[black] font-black">Rs. {grandTotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span>Payment Mode</span>
@@ -340,6 +414,23 @@ export default function CartDrawer({
             </div>
 
             <div className="space-y-2">
+              <a
+                href={`https://wa.me/9779705283444?text=${encodeURIComponent(
+                  `🚨 *NEW FIT YATRA ORDER RECEIVED* 🚨\n\n*Order ID:* ${activeOrderId}\n*Customer Name:* ${checkoutName}\n*Contact Phone:* ${checkoutPhone}\n*Delivery Region:* ${activeRegion.name}\n*Exact Landmark:* ${checkoutAddress.trim()}\n*Total Amount:* Rs. ${grandTotal.toLocaleString()}\n\n*🛒 Order Items:*\n${cart.map((item, idx) => `${idx + 1}. ${item.product.name} (Qty: ${item.quantity})`).join("\n")}\n\n---\nSent via FitYatra Applet Dispatcher`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  // Track it & clear cart
+                  onTrackNewOrder(activeOrderId);
+                  onClearCart();
+                  onClose();
+                }}
+                className="cursor-pointer w-full py-3 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-none text-xs font-mono uppercase tracking-widest transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold no-underline"
+              >
+                <span>Send WhatsApp Receipt 💬</span>
+              </a>
+
               <button
                 onClick={() => {
                   onTrackNewOrder(activeOrderId);

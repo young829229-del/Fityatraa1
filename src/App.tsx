@@ -14,7 +14,23 @@ import { PRODUCTS } from "./data";
 import { Product, CartItem } from "./types";
 
 export default function App() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const persisted = localStorage.getItem("fityatra_active_cart");
+      return persisted ? JSON.parse(persisted) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("fityatra_active_cart", JSON.stringify(cart));
+    } catch (e) {
+      console.error("Failed to save cart to localStorage", e);
+    }
+  }, [cart]);
+
   const [activeTab, setActiveTab] = useState<string>("home");
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("All");
   const [catalogSearchQuery, setCatalogSearchQuery] = useState<string>("");
@@ -75,6 +91,11 @@ export default function App() {
 
   const handleClearCart = () => {
     setCart([]);
+  };
+
+  const handleLoadSavedCart = (items: CartItem[]) => {
+    setCart(items);
+    triggerToast("Successfully restored your saved cart!");
   };
 
   // Custom Navigation scrolling layout helper
@@ -152,6 +173,17 @@ export default function App() {
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 pointer-events-none" />
           </div>
         </section>
+
+        {/* HERO BUY NOW ACTION ROW */}
+        <div id="hero-buy-now-banner" className="py-8 flex justify-center bg-[#FAF9F6] border-b border-[#1A1A1A]/10 animate-fade-in">
+          <button
+            id="hero-buy-now-button"
+            onClick={() => handleSectionNavigation("shop")}
+            className="cursor-pointer bg-white hover:bg-neutral-50 text-black border border-black/20 font-quattrocento uppercase tracking-[0.2em] text-sm sm:text-base font-black px-12 sm:px-16 py-3 sm:py-3.5 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 flex items-center justify-center"
+          >
+            BUY NOW
+          </button>
+        </div>
 
         {/* MOST LOVED PRODUCTS SECTIONS LAYOUT */}
         <section id="catalog-showcase-section" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

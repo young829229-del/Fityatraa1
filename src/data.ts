@@ -195,19 +195,19 @@ export const PRODUCTS: Product[] = [
 export const TESTIMONIALS: Testimonial[] = [
   {
     id: "rev-1",
-    name: "Rupesh T.",
+    name: "Prashant M.",
     rating: 5,
-    comment: "It taste really good and mix well with milk or water. I will order again once my recent one is finished! Highly recommended to physical lifters in Nepal.",
-    date: "2 weeks ago",
+    comment: "I am using this product since week ago and I have noticed good changes in my stamina and strength.",
+    date: "1 week ago",
     statusVerified: true,
     imgUrl: "https://i.ibb.co/qw5FZw1/uy-NBmf-CIDi-mid.jpg"
   },
   {
     id: "rev-2",
-    name: "Prabin Shrestha",
+    name: "Rajesh B.",
     rating: 5,
-    comment: "Wellcore creatine is literally zero grit. Dissolves within 10 seconds of stirring! Got authentic scratch code which verified perfectly on the brand portal.",
-    date: "1 month ago",
+    comment: "I have been using Wellcore Micronized Creatine Monohydrate for the past month and the results are exceptional.",
+    date: "2 weeks ago",
     statusVerified: true,
     imgUrl: "https://i.ibb.co/fdGvD3RT/Hvp7i-Ea-KZK-mid.jpg"
   },

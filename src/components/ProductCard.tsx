@@ -238,10 +238,10 @@ export default function ProductCard({
             </div>
           </div>
 
-          {/* Product Title - Editorial Serif style */}
+          {/* Product Title - Space Grotesk modern sans-serif style */}
           <h3
             onClick={() => onViewDetails(product)}
-            className="text-xs sm:text-sm font-serif text-[#1A1A1A] hover:text-gray-600 transition-colors cursor-pointer line-clamp-2 min-h-[2rem] leading-tight mb-1 sm:mb-2"
+            className="text-xs sm:text-sm font-display font-bold text-[#1A1A1A] hover:text-gray-600 transition-colors cursor-pointer line-clamp-2 min-h-[2rem] leading-tight mb-1 sm:mb-2"
           >
             {product.name}
           </h3>
@@ -259,10 +259,10 @@ export default function ProductCard({
         {/* Action Bottom (Price and Add/View buttons) */}
         <div>
           <div className="flex items-baseline flex-wrap gap-1 mb-2 sm:mb-2.5 border-t border-gray-100 pt-2">
-            <span className="text-sm sm:text-base font-serif italic font-black text-black">
+            <span className="text-sm sm:text-base font-geometric font-black text-black">
               Rs. {product.price.toLocaleString()}
             </span>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 line-through font-mono ml-1">
+            <span className="text-[9px] sm:text-[10px] text-gray-400 line-through font-geometric ml-1 font-semibold">
               Rs. {product.originalPrice.toLocaleString()}
             </span>
           </div>

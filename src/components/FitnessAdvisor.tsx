@@ -303,8 +303,8 @@ export default function FitnessAdvisor({ onClose, onAddProductToCart }: FitnessA
                           <div className="flex items-center gap-2.5">
                             <span className="h-2 w-2 rounded-none bg-[black]"></span>
                             <div>
-                              <h5 className="text-xs font-serif font-bold text-gray-900">{prod.name}</h5>
-                              <p className="text-[10px] text-gray-400 font-mono">Rs. {prod.price.toLocaleString()} • {prod.brand}</p>
+                              <h5 className="text-xs font-display font-bold text-gray-900">{prod.name}</h5>
+                              <p className="text-[10px] text-gray-400 font-geometric font-semibold">Rs. {prod.price.toLocaleString()} <span className="font-mono"> • {prod.brand}</span></p>
                             </div>
                           </div>
                           <button
@@ -433,8 +433,8 @@ export default function FitnessAdvisor({ onClose, onAddProductToCart }: FitnessA
                           <div className="flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-[black]" />
                             <div>
-                              <h5 className="text-xs font-serif font-bold text-gray-800">{prod.name}</h5>
-                              <p className="text-[9px] text-gray-400 font-mono">Rs. {prod.price.toLocaleString()} each</p>
+                              <h5 className="text-xs font-display font-bold text-gray-800">{prod.name}</h5>
+                              <p className="text-[9px] text-gray-400 font-geometric font-semibold">Rs. {prod.price.toLocaleString()} each</p>
                             </div>
                           </div>
                           <button
