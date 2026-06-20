@@ -139,14 +139,23 @@ export default function App() {
       {/* PRIMARY VIEWS LAYOUT CONTAINER */}
       <main className="flex-grow">
         
-        {/* STUNNING HERO PORTRAIT BANNER (1080 x 1920 aspect ratio) */}
-        <section className="relative w-full bg-zinc-950 flex flex-col justify-center overflow-hidden aspect-[9/16] sm:aspect-auto sm:h-[80vh] md:h-[90vh]">
+        {/* STUNNING HERO PORTRAIT/LANDSCAPE BANNER */}
+        <section className="relative w-full bg-zinc-950 flex flex-col justify-center overflow-hidden aspect-[9/16] sm:aspect-[21/9]">
           {/* Background image covering full bleed */}
           <div className="absolute inset-0 z-0">
+            {/* Mobile Hero Image */}
             <img
               src="https://i.ibb.co/DFnZ5Fy/Phone-Version-4-1-1-1.jpg"
-              alt="FitYatra Background"
-              className="w-full h-full object-cover object-top filter brightness-[0.85] contrast-[1.05]"
+              alt="FitYatra Mobile Background"
+              className="block sm:hidden w-full h-full object-cover object-top filter brightness-[0.85] contrast-[1.05]"
+              referrerPolicy="no-referrer"
+            />
+            {/* Desktop / Laptop Hero Image */}
+            <img
+              src="https://i.ibb.co/KcBDpGYD/MV2-1-1-1.jpg"
+              alt="FitYatra Desktop Background"
+              className="hidden sm:block w-full h-full object-cover object-center filter brightness-[0.85] contrast-[1.05]"
+              referrerPolicy="no-referrer"
             />
             {/* Soft sophisticated dark fade at bottom and top to blend nicely */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 pointer-events-none" />
