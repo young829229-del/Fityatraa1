@@ -3,7 +3,7 @@ import { Product, Testimonial, FAQ } from "./types";
 export const PRODUCTS: Product[] = [
   {
     id: "wellcore-creatine",
-    name: "Wellcore - Micronised Creatine Monohydrate",
+    name: "Wellcore - Micronised Creatine Monohydrate (300g)",
     brand: "Wellcore",
     category: "Creatine",
     price: 2199,
@@ -23,14 +23,15 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/yF9z3S1N/wellcore-back-cover.jpg"
     ],
     description: "Unprecedented purity. Wellcore Micronised Creatine Monohydrate fuels muscle protein synthesis, enhances cellular ATP production, and amplifies raw power output during physical training. It dissolves instantly in water and is 100% unflavoured to easily stack with your favorite whey or pre-workouts.",
-    servings: "83 Servings",
-    servingSize: "3g",
+    servings: "100 Servings",
+    servingSize: "3g (300g)",
     goals: ["Muscle Volume", "Physical Strength", "Accelerated Recovery"],
     specs: {
       "Purity": "100% Pure Creatine",
       "Type": "HPLC Verified Micronized",
       "Flavour": "Unflavoured",
-      "Added sugars": "0g"
+      "Added sugars": "0g",
+      "Weight": "300g Pack"
     },
     nutritionFacts: {
       "Creatine Monohydrate": "3000 mg",
@@ -50,7 +51,7 @@ export const PRODUCTS: Product[] = [
     discountPercentage: 32,
     rating: 4.8,
     reviewCount: 22,
-    isSoldOut: false,
+    isSoldOut: true,
     image: "https://i.ibb.co/cSgpP79g/Orange-x2-824459d1-3442-46cc-bf0e-df457bb1c82d.jpg",
     gallery: [
       "https://i.ibb.co/cSgpP79g/Orange-x2-824459d1-3442-46cc-bf0e-df457bb1c82d.jpg",
@@ -77,7 +78,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "myfitness-pb",
-    name: "Original Crunchy Peanut Butter (25% Protein)",
+    name: "Original Crunchy Peanut Butter (1.25kg Jar)",
     brand: "MyFitness",
     category: "Nutrition",
     price: 599,
@@ -100,14 +101,15 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/1fNz1HpY/Original-PBcruchy1250-G-amazon-listingcopy-b10c1b5e-6f7e-4d53-8566-19d8a237869e-1.jpg"
     ],
     description: "MyFitness Original Crunchy Peanut Butter is packed with 25% clean protein from slow-roasted premium peanuts. High in healthy monounsaturated fats, and minimal added brown sugar, this delivers a delectable crunch that is the perfect clean fuel for pre-workout carbs or bulk shake recipes.",
-    servings: "39 Servings",
+    servings: "39 Servings (1.25kg)",
     servingSize: "32g (2 Tbsp)",
     goals: ["Healthy Fats", "Calorie Bulking", "Energy Boost"],
     specs: {
       "Protein Ratio": "25% High-Protein",
       "Texture": "Ultra-crunchy & Creamy",
       "Roast Type": "Slow-Roasted",
-      "Fiber Support": "3g per serving"
+      "Fiber Support": "3g per serving",
+      "Volume": "1.25kg (1250g)"
     },
     nutritionFacts: {
       "Calories": "202 kcal",
@@ -119,7 +121,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "muscleblaze-fishoil",
-    name: "Omega 3 Fish Oil Gold 3x Triple Strength",
+    name: "Omega 3 Fish Oil Gold (60 Capsules)",
     brand: "MuscleBlaze",
     category: "Wellness",
     price: 2299,
@@ -137,8 +139,8 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/cSF14TTV/5.jpg"
     ],
     description: "Triple potency Omega-3 fatty acids. MuscleBlaze Fish Oil Gold provides 1250mg of molecularly distilled premium fish oil, supplying 540mg of EPA and 360mg of DHA. It supports cartilage hydration, joint fluid dynamics, brain function, and skin tone. Features advanced enteric coating to prevent digestive reflux and fishy aftertaste.",
-    servings: "60 Softgels",
-    servingSize: "1 Softgel",
+    servings: "60 Capsules",
+    servingSize: "1 Capsule (Softgel)",
     goals: ["Joint Mobility", "Cardiovascular Support", "Cognitive Health"],
     specs: {
       "Total Omega-3": "900 mg",
@@ -164,7 +166,7 @@ export const PRODUCTS: Product[] = [
     discountPercentage: 25,
     rating: 4.6,
     reviewCount: 18,
-    isSoldOut: false,
+    isSoldOut: true,
     image: "https://i.ibb.co/kVqXx1fR/Colalgen.png",
     gallery: [
       "https://i.ibb.co/kVqXx1fR/Colalgen.png",

@@ -66,18 +66,18 @@ export default function ProductDetailModal({
       };
     } else if (name.includes("creatine") || cat.includes("creatine")) {
       return {
-        weights: ["250g", "100g", "500g"],
-        flavors: ["Unflavored", "Fruit Punch", "Lemony Mint"]
+        weights: ["300 gram"],
+        flavors: ["Unflavoured"]
       };
     } else if (name.includes("peanut") || name.includes("butter")) {
       return {
-        weights: ["1Kg", "500g", "2.5Kg"],
-        flavors: ["Crunchy Gold", "Creamy Classic", "Dark Chocolate Blend"]
+        weights: ["1.25kg"],
+        flavors: ["Crunchy"]
       };
     } else if (name.includes("oil") || name.includes("omega") || name.includes("fish")) {
       return {
-        weights: ["60 Softgels", "120 Softgels"],
-        flavors: ["Odorless / Marine Grade Pure"]
+        weights: ["60 Capsules"],
+        flavors: ["Premium Omega-3"]
       };
     } else {
       return {
