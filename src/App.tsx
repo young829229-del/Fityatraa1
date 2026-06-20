@@ -174,16 +174,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* HERO BUY NOW ACTION ROW */}
-        <div id="hero-buy-now-banner" className="py-8 flex justify-center bg-[#FAF9F6] border-b border-[#1A1A1A]/10 animate-fade-in">
-          <button
-            id="hero-buy-now-button"
-            onClick={() => handleSectionNavigation("shop")}
-            className="cursor-pointer bg-white hover:bg-neutral-50 text-black border border-black/20 font-quattrocento uppercase tracking-[0.2em] text-sm sm:text-base font-black px-12 sm:px-16 py-3 sm:py-3.5 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 flex items-center justify-center"
-          >
-            BUY NOW
-          </button>
-        </div>
+
 
         {/* MOST LOVED PRODUCTS SECTIONS LAYOUT */}
         <section id="catalog-showcase-section" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -202,37 +193,17 @@ export default function App() {
           </div>
 
           {/* Filtering Control Bar */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-[#1A1A1A]/10 pb-6 mb-8 text-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 border-b border-[#1A1A1A]/10 pb-6 mb-8 text-xs">
             
-            {/* Category tabs filters pills */}
-            <div className="flex flex-wrap gap-1.5 justify-center md:justify-start w-full md:w-auto">
-              {["All", "Protein", "Creatine", "Wellness", "Nutrition"].map((category) => (
-                <button
-                  key={category}
-                  onClick={() => {
-                    setActiveCategoryFilter(category);
-                    triggerToast(`Filtered by ${category} category`);
-                  }}
-                  className={`cursor-pointer px-4 py-2.5 rounded-none border font-mono uppercase tracking-wider text-[10px] transition-colors ${
-                    activeCategoryFilter === category
-                      ? "bg-[#1A1A1A] text-white border-[#1A1A1A] font-bold"
-                      : "bg-[#FAFAFA] text-gray-650 border-[#1A1A1A]/20 hover:border-black hover:text-black"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
             {/* Keyword product search input */}
-            <div className="relative w-full md:max-w-xs">
+            <div className="relative w-full max-w-sm">
               <Search className="w-3.5 h-3.5 text-gray-450 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search supplements (e.g. Wellcore)..."
                 value={catalogSearchQuery}
                 onChange={(e) => setCatalogSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#1A1A1A]/20 rounded-none text-xs focus:outline-none focus:border-black placeholder:text-gray-400 font-sans"
+                className="w-full pl-9 pr-12 py-2.5 bg-white border border-[#1A1A1A]/20 rounded-none text-xs focus:outline-none focus:border-black placeholder:text-gray-400 font-sans"
               />
               {catalogSearchQuery && (
                 <button

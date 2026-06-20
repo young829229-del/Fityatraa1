@@ -473,27 +473,12 @@ export default function ProductDetailModal({
               </div>
             </div>
 
-            {/* Desktop Action Buy Now & Add To Cart button row */}
-            <div className="hidden sm:grid grid-cols-2 gap-3.5 pt-2">
-              <button
-                disabled={product.isSoldOut}
-                onClick={() => {
-                  if (onBuyNow) {
-                    onBuyNow(product, quantity);
-                  } else {
-                    onAddToCart(product, quantity);
-                  }
-                  onClose();
-                }}
-                className="w-full py-3 bg-white hover:bg-neutral-50 text-neutral-900 border-2 border-neutral-950 font-quattrocento font-extrabold rounded-lg text-sm sm:text-base uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                BUY NOW
-              </button>
-              
+            {/* Desktop Action Add To Cart button row */}
+            <div className="hidden sm:block pt-2">
               {product.isSoldOut ? (
                 <button
                   disabled
-                  className="w-full py-3.5 bg-neutral-200 text-neutral-450 font-bold rounded-lg text-xs uppercase tracking-widest cursor-not-allowed"
+                  className="w-full py-4 bg-neutral-200 text-neutral-450 font-bold rounded-lg text-sm uppercase tracking-widest cursor-not-allowed"
                 >
                   SOLD OUT
                 </button>
@@ -503,9 +488,9 @@ export default function ProductDetailModal({
                     onAddToCart(product, quantity);
                     onClose();
                   }}
-                  className="w-full py-3.5 bg-[#FFCD00] hover:bg-[#E2B600] text-black font-extrabold rounded-lg text-xs uppercase tracking-widest transition-all active:scale-[0.98] shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full py-4 bg-[#FFCD00] hover:bg-[#E2B600] text-black font-extrabold rounded-lg text-sm uppercase tracking-widest transition-all active:scale-[0.98] shadow-md cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <ShoppingCart className="w-4 h-4 text-black" strokeWidth={2.5} /> ADD TO CART
+                  <ShoppingCart className="w-5 h-5 text-black" strokeWidth={2.5} /> ADD TO CART
                 </button>
               )}
             </div>
@@ -951,32 +936,17 @@ export default function ProductDetailModal({
               Sold out
             </button>
           ) : (
-            <>
-              <button 
-                type="button"
-                onClick={() => {
-                  onAddToCart(product, quantity);
-                  onClose();
-                }}
-                className="flex-1 bg-white hover:bg-neutral-50 text-neutral-900 border border-neutral-400 transition-colors py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <span>Add</span>
-              </button>
-              <button 
-                type="button"
-                onClick={() => {
-                  if (onBuyNow) {
-                    onBuyNow(product, quantity);
-                  } else {
-                    onAddToCart(product, quantity);
-                  }
-                  onClose();
-                }}
-                className="flex-[1.2] bg-[#FFCD00] hover:bg-[#E2B600] text-black hover:text-black hover:shadow-md transition-all py-2.5 px-3 rounded-lg text-sm font-quattrocento font-extrabold uppercase tracking-wider text-center cursor-pointer"
-              >
-                Buy Now
-              </button>
-            </>
+            <button 
+              type="button"
+              onClick={() => {
+                onAddToCart(product, quantity);
+                onClose();
+              }}
+              className="flex-1 bg-[#FFCD00] hover:bg-[#E2B600] text-black transition-colors py-3 px-3 rounded-lg text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <ShoppingCart className="w-4 h-4 text-black" strokeWidth={2.5} />
+              <span>Add To Cart</span>
+            </button>
           )}
         </div>
       </div>
