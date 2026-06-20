@@ -330,9 +330,6 @@ Sent via FitYatra Applet Dispatcher`;
                         />
                       </div>
                     </div>
-                    <p className="text-[9px] font-mono text-gray-400 mt-0.5 leading-none">
-                      🔒 Your mobile number will be used to send your live Order Dispatch tracking link & details.
-                    </p>
                   </div>
 
                   {/* Manual Landmark Address Entry */}
