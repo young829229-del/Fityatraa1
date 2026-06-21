@@ -32,7 +32,10 @@ export default function ProductDetailModal({
 }: ProductDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"description" | "nutrition" | "reviews">("description");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const quantity = 1; // Limit 1 quantity per client
+  const [detailQuantity, setDetailQuantity] = useState(1);
+  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
+  const [isZooming, setIsZooming] = useState(false);
+  const [newReviewVideos, setNewReviewVideos] = useState<string[]>([]);
   const [shareConfig, setShareConfig] = useState({ showToast: false, text: "" });
 
   // Custom reviews states
@@ -135,8 +138,24 @@ export default function ProductDetailModal({
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (typeof reader.result === "string") {
-          setNewReviewImages((prev) => [...prev, reader.result as string]);
+        const val = reader.result;
+        if (typeof val === "string") {
+          setNewReviewImages((prev) => [...prev, val]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const val = reader.result;
+        if (typeof val === "string") {
+          setNewReviewVideos((prev) => [...prev, val]);
         }
       };
       reader.readAsDataURL(file);
@@ -147,15 +166,21 @@ export default function ProductDetailModal({
     setNewReviewImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const handleRemoveSelectedVideo = (idx: number) => {
+    setNewReviewVideos((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   // Create review submission
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReviewName.trim()) {
-      alert("Please enter a nickname / name.");
+      setShareConfig({ showToast: true, text: "Please enter a nickname/name" });
+      setTimeout(() => setShareConfig({ showToast: false, text: "" }), 3000);
       return;
     }
     if (!newReviewComment.trim()) {
-      alert("Please enter some feedback.");
+      setShareConfig({ showToast: true, text: "Please enter some feedback" });
+      setTimeout(() => setShareConfig({ showToast: false, text: "" }), 3000);
       return;
     }
 
@@ -164,6 +189,7 @@ export default function ProductDetailModal({
       rating: newReviewRating,
       comment: newReviewComment.trim(),
       images: newReviewImages,
+      videos: newReviewVideos,
       verified: true,
       isUserAdded: true,
     };
@@ -179,6 +205,10 @@ export default function ProductDetailModal({
     setNewReviewRating(5);
     setNewReviewComment("");
     setNewReviewImages([]);
+    setNewReviewVideos([]);
+    
+    setShareConfig({ showToast: true, text: "Feedback added successfully!" });
+    setTimeout(() => setShareConfig({ showToast: false, text: "" }), 3000);
   };
 
   // Delete review
@@ -191,7 +221,8 @@ export default function ProductDetailModal({
   // Save inline edit review
   const handleSaveEdit = (id: string) => {
     if (!editingComment.trim()) {
-      alert("Comment cannot be empty");
+      setShareConfig({ showToast: true, text: "Comment cannot be empty" });
+      setTimeout(() => setShareConfig({ showToast: false, text: "" }), 3000);
       return;
     }
     updateProductReview(id, {
@@ -201,6 +232,9 @@ export default function ProductDetailModal({
     setEditingReviewId(null);
     const updated = getProductReviews(product.id);
     setReviewsList(updated);
+    
+    setShareConfig({ showToast: true, text: "Feedback saved successfully!" });
+    setTimeout(() => setShareConfig({ showToast: false, text: "" }), 3000);
   };
 
   // Calculations for reviews stats and discounts
@@ -251,14 +285,35 @@ export default function ProductDetailModal({
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              className="w-full relative flex justify-center items-center aspect-square max-h-[300px] md:max-h-[350px] p-2 cursor-col-resize overflow-hidden"
-              title="Swipe left or right to switch images"
+              onMouseEnter={() => setIsZooming(true)}
+              onMouseLeave={() => setIsZooming(false)}
+              onMouseMove={(e) => {
+                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+                const x = ((e.clientX - left) / width) * 100;
+                const y = ((e.clientY - top) / height) * 100;
+                setZoomPos({ x, y });
+              }}
+              className="w-full relative flex justify-center items-center aspect-square max-h-[300px] md:max-h-[350px] p-2 overflow-hidden bg-white cursor-zoom-in"
+              title="Hover to Zoom or Swipe left/right on mobile"
             >
               <img 
                 src={album[activeImageIndex] && album[activeImageIndex].startsWith("http") ? album[activeImageIndex] : product.image} 
                 alt={`${product.brand} ${product.name}`} 
-                className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-500 pointer-events-none" 
+                style={isZooming ? {
+                  transform: "scale(1.8)",
+                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  transition: "transform 0.15s ease-out"
+                } : {
+                  transform: "scale(1)",
+                  transition: "transform 0.3s ease-out"
+                }}
+                className="max-w-full max-h-full object-contain" 
               />
+              
+              {/* Zoom badge indicator */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/75 backdrop-blur-xs text-[8px] text-white font-mono tracking-widest px-2.5 py-0.5 pointer-events-none uppercase">
+                🔍 HOVER TO ZOOM
+              </div>
               
               {/* Manual image slider navigators */}
               {album.length > 1 && (
@@ -444,34 +499,51 @@ export default function ProductDetailModal({
             </div>
 
             {/* STAGED QUANTITY DISPLAY (SECURE CLIENT QUOTA) */}
-            <div className="space-y-3 bg-neutral-50 p-4 border border-neutral-200 rounded-xl">
+            <div className="space-y-4 bg-white p-4 border border-neutral-200 rounded-none">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-neutral-900 block font-sans tracking-wide">Selected Quantity</span>
-                  <span className="text-[10px] text-emerald-600 block font-sans font-semibold">1 Unit (Standard Client Quota)</span>
+                  <span className="text-xs font-montserrat font-bold text-neutral-900 block uppercase tracking-wider">Select Order Quantity</span>
+                  <span className="text-[10px] text-[#22C55E] block font-semibold">Genuine Batch Verified</span>
                 </div>
-                <div className="text-xs font-mono bg-neutral-200 text-neutral-800 px-3 py-1.5 rounded font-bold uppercase select-none">
-                  Qty: {quantity}
+                {/* Plus Minus controls */}
+                <div className="flex items-center border border-black select-none">
+                  <button 
+                    type="button"
+                    onClick={() => setDetailQuantity(prev => Math.max(1, prev - 1))}
+                    className="cursor-pointer px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-black font-extrabold text-sm border-r border-black"
+                  >
+                    -
+                  </button>
+                  <span className="px-4 py-1.5 font-montserrat font-bold text-xs text-black min-w-[32px] text-center">
+                    {detailQuantity}
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={() => setDetailQuantity(prev => Math.min(10, prev + 1))}
+                    className="cursor-pointer px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-black font-extrabold text-sm border-l border-black"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
               {/* Subtotal Real-Time Calculation breakdown block */}
-              <div className="border-t border-[#1A1A1A]/5 pt-3 flex flex-col gap-1 text-xs">
+              <div className="border-t border-[#1A1A1A]/5 pt-3 flex flex-col gap-1.5 text-xs">
                 {product.originalPrice > product.price && (
-                  <div className="flex justify-between items-center text-emerald-600 font-sans font-semibold text-[11px]">
+                  <div className="flex justify-between items-center text-[#22C55E] font-semibold text-[11px]">
                     <span>Discounted Savings</span>
-                    <span className="font-geometric bg-emerald-55/10 border border-emerald-150 px-2 py-0.5">
-                      - Rs. {(product.originalPrice - product.price).toLocaleString()}
+                    <span className="font-montserrat font-bold">
+                      - Rs. {((product.originalPrice - product.price) * detailQuantity).toLocaleString()}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between items-center text-neutral-900 font-sans font-bold border-t border-dashed border-[#1A1A1A]/10 pt-2 text-sm mt-1">
-                  <span>Actual Net Total</span>
+                <div className="flex justify-between items-center text-neutral-900 font-bold border-t border-dashed border-[#1A1A1A]/10 pt-2 text-sm mt-1">
+                  <span className="font-montserrat uppercase tracking-wider text-xs">Actual Net Total</span>
                   <div className="text-right">
-                    <span className="font-geometric font-black text-neutral-950 text-base">
-                      Rs. {product.price.toLocaleString()}
+                    <span className="font-montserrat font-extrabold text-[#111111] text-base">
+                      Rs. {(product.price * detailQuantity).toLocaleString()}
                     </span>
-                    <span className="text-[10px] text-gray-400 block font-mono">excluding delivery fee</span>
+                    <span className="text-[10px] text-gray-500 block font-mono">excluding delivery/courier fee</span>
                   </div>
                 </div>
               </div>
@@ -504,7 +576,7 @@ export default function ProductDetailModal({
               ) : (
                 <button
                   onClick={() => {
-                    onAddToCart(product, quantity);
+                    onAddToCart(product, detailQuantity);
                     onClose();
                   }}
                   className="w-full py-4 bg-[#FFCD00] hover:bg-[#E2B600] text-black font-extrabold rounded-lg text-sm uppercase tracking-widest transition-all active:scale-[0.98] shadow-md cursor-pointer flex items-center justify-center gap-2"
@@ -731,44 +803,88 @@ export default function ProductDetailModal({
                           />
                         </div>
 
-                        {/* Image file select uploader */}
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-mono font-bold text-text-gray-500 block">Upload Supplement Snapshots</label>
-                          <div 
-                            className="border-2 border-dashed border-neutral-300 hover:border-black/55 bg-[#FAFAFA] hover:bg-neutral-50 p-4 rounded-lg text-center cursor-pointer transition-colors"
-                            onClick={() => document.getElementById("review-photo-uploads")?.click()}
-                          >
-                            <span className="text-[11px] text-neutral-500 block font-medium">
-                              Drag & drop or <span className="text-black font-bold underline">browse files</span>
-                            </span>
-                            <span className="text-[9px] text-gray-400 font-mono block mt-1">PNG, JPG formats supported</span>
-                            <input 
-                              id="review-photo-uploads"
-                              type="file" 
-                              multiple 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={handleFileChange}
-                            />
+                        {/* Image & Video file select uploaders */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 pt-1">
+                          {/* Image file select uploader */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] uppercase font-mono font-bold text-neutral-500 block">Supplement Snapshots</label>
+                            <div 
+                              className="border-2 border-dashed border-neutral-300 hover:border-black bg-[#FAFAFA] hover:bg-neutral-50 p-4 rounded-lg text-center cursor-pointer transition-colors h-24 flex flex-col justify-center"
+                              onClick={() => document.getElementById("review-photo-uploads")?.click()}
+                            >
+                              <span className="text-[11px] text-neutral-500 block font-medium leading-tight">
+                                <span className="text-black font-bold underline">Add photos</span>
+                              </span>
+                              <span className="text-[9px] text-gray-400 font-mono block mt-1">PNG, JPG formats</span>
+                              <input 
+                                id="review-photo-uploads"
+                                type="file" 
+                                multiple 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={handleFileChange}
+                              />
+                            </div>
+
+                            {/* Preview selected review images waiting to upload */}
+                            {newReviewImages.length > 0 && (
+                              <div className="flex gap-1.5 flex-wrap pt-2">
+                                {newReviewImages.map((b64, idx) => (
+                                  <div key={idx} className="w-10 h-10 rounded-lg border border-neutral-250 overflow-hidden relative group aspect-square">
+                                    <img src={b64} alt="upload preview" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveSelectedImage(idx)}
+                                      className="absolute inset-0 bg-red-600/90 text-white text-[8px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
-                          {/* Preview selected review images waiting to upload */}
-                          {newReviewImages.length > 0 && (
-                            <div className="flex gap-2 flex-wrap pt-2.5">
-                              {newReviewImages.map((b64, idx) => (
-                                <div key={idx} className="w-12 h-12 rounded-lg border border-neutral-250 overflow-hidden relative group aspect-square">
-                                  <img src={b64} alt="upload preview" className="w-full h-full object-cover" />
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveSelectedImage(idx)}
-                                    className="absolute inset-0 bg-red-650/85 text-white text-[9px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              ))}
+                          {/* Video file select uploader */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] uppercase font-mono font-bold text-neutral-500 block">Supplement Videos</label>
+                            <div 
+                              className="border-2 border-dashed border-neutral-300 hover:border-black bg-[#FAFAFA] hover:bg-neutral-50 p-4 rounded-lg text-center cursor-pointer transition-colors h-24 flex flex-col justify-center"
+                              onClick={() => document.getElementById("review-video-uploads")?.click()}
+                            >
+                              <span className="text-[11px] text-neutral-500 block font-medium leading-tight">
+                                <span className="text-black font-bold underline">Add videos</span>
+                              </span>
+                              <span className="text-[9px] text-gray-400 font-mono block mt-1">MP4, MOV formats</span>
+                              <input 
+                                id="review-video-uploads"
+                                type="file" 
+                                multiple 
+                                accept="video/*" 
+                                className="hidden" 
+                                onChange={handleVideoFileChange}
+                              />
                             </div>
-                          )}
+
+                            {/* Preview selected review videos waiting to upload */}
+                            {newReviewVideos.length > 0 && (
+                              <div className="flex gap-1.5 flex-wrap pt-2">
+                                {newReviewVideos.map((b64, idx) => (
+                                  <div key={idx} className="w-10 h-10 rounded-lg border border-neutral-250 overflow-hidden relative group aspect-square flex items-center justify-center bg-black">
+                                    <video src={b64} className="w-full h-full object-cover pointer-events-none" />
+                                    <div className="absolute inset-0 flex items-center justify-center text-white text-[8px] font-bold bg-black/40">🎬</div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveSelectedVideo(idx)}
+                                      className="absolute inset-0 bg-red-650/90 text-white text-[8px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Submit button */}
@@ -894,18 +1010,26 @@ export default function ProductDetailModal({
                                   )}
                                 </div>
 
-                                {/* Review snap attachments gallery */}
-                                {!isEditing && rev.images && rev.images.length > 0 && (
-                                  <div className="flex gap-1.5 flex-wrap pt-1.5">
-                                    {rev.images.map((snap, idx) => (
-                                      <img 
-                                        key={idx} 
-                                        src={snap} 
-                                        alt="review snap" 
-                                        onClick={() => setPreviewImageUrl(snap)}
-                                        className="w-12 h-12 object-cover rounded-lg border border-neutral-150 cursor-pointer hover:opacity-85 transition-opacity" 
-                                        referrerPolicy="no-referrer"
-                                      />
+                                {/* Review attachments gallery (images & videos) */}
+                                {!isEditing && (
+                                  <div className="flex gap-2 flex-wrap pt-1.5">
+                                    {/* Images */}
+                                    {rev.images && rev.images.map((snap, idx) => (
+                                      <div key={`img-${idx}`} className="relative w-12 h-12 rounded-lg border border-neutral-150 overflow-hidden cursor-pointer hover:opacity-85 transition-opacity" onClick={() => setPreviewImageUrl(snap)}>
+                                        <img 
+                                          src={snap} 
+                                          alt="review snap" 
+                                          className="w-full h-full object-cover" 
+                                          referrerPolicy="no-referrer"
+                                        />
+                                      </div>
+                                    ))}
+                                    {/* Videos */}
+                                    {rev.videos && rev.videos.map((vid, idx) => (
+                                      <div key={`vid-${idx}`} className="relative w-12 h-12 rounded-lg border border-neutral-150 overflow-hidden bg-black cursor-pointer hover:opacity-85 transition-opacity flex items-center justify-center" onClick={() => setPreviewImageUrl(vid)}>
+                                        <video src={vid} className="w-full h-full object-cover pointer-events-none" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white font-bold text-[10px]">▶</div>
+                                      </div>
                                     ))}
                                   </div>
                                 )}
@@ -930,18 +1054,16 @@ export default function ProductDetailModal({
           </div>
         </div>
         
-      </div>
-
-      {/* STICKY "ADD TO CART" & "BUY NOW" BOTTOM CONTROLS ON MOBILE SCREENS ONLY */}
+      </div>      {/* STICKY "ADD TO CART" & "BUY NOW" BOTTOM CONTROLS ON MOBILE SCREENS ONLY */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md p-3 px-4 border-t border-neutral-200 flex items-center justify-between gap-4 shadow-[0_-5px_15px_rgba(0,0,0,0.06)] animate-slide-up select-none">
         <div className="flex flex-col text-left">
           <span className="text-[9px] text-neutral-400 uppercase font-mono tracking-wider">Net Amount</span>
-          <span className="text-sm font-black text-neutral-950 font-geometric">
-            Rs. {(product.price * quantity).toLocaleString()}
+          <span className="text-sm font-black text-[#111111] font-montserrat">
+            Rs. {(product.price * detailQuantity).toLocaleString()}
           </span>
           {product.originalPrice > product.price && (
-            <span className="text-[8px] bg-emerald-55/10 border border-emerald-150 text-emerald-700 px-1 py-0.5 rounded-none font-bold uppercase block w-fit mt-0.5 animate-pulse font-geometric">
-              Save Rs. {((product.originalPrice - product.price) * quantity).toLocaleString()}
+            <span className="text-[8px] bg-emerald-50 border border-emerald-200 text-emerald-700 px-1 py-0.5 rounded-none font-bold uppercase block w-fit mt-0.5">
+              Save Rs. {((product.originalPrice - product.price) * detailQuantity).toLocaleString()}
             </span>
           )}
         </div>
@@ -974,7 +1096,7 @@ export default function ProductDetailModal({
             <button 
               type="button"
               onClick={() => {
-                onAddToCart(product, quantity);
+                onAddToCart(product, detailQuantity);
                 onClose();
               }}
               className="flex-1 bg-[#FFCD00] hover:bg-[#E2B600] text-black transition-colors py-3 px-3 rounded-lg text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
@@ -986,24 +1108,33 @@ export default function ProductDetailModal({
         </div>
       </div>
 
-      {/* Lightbox / Zoom-In Photo overlay layer */}
+      {/* Lightbox / Zoom-In Photo/Video overlay layer */}
       {previewImageUrl && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 animate-fade-in">
           <button 
             type="button"
             onClick={() => setPreviewImageUrl(null)}
-            className="absolute top-6 right-6 p-2 rounded-full bg-white text-black hover:bg-black hover:text-white transition-colors"
-            title="Close photo"
+            className="absolute top-6 right-6 p-2 rounded-full bg-white text-black hover:bg-black hover:text-white transition-colors cursor-pointer"
+            title="Close attachment"
           >
             <X className="w-5 h-5" />
           </button>
-          <div className="max-w-4xl max-h-[85vh] flex items-center justify-center pointer-events-none">
-            <img 
-              src={previewImageUrl} 
-              alt="enlarged review snap" 
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" 
-              referrerPolicy="no-referrer"
-            />
+          <div className="max-w-4xl max-h-[85vh] flex items-center justify-center">
+            {previewImageUrl.startsWith("data:video/") || previewImageUrl.endsWith(".mp4") || previewImageUrl.endsWith(".mov") ? (
+              <video 
+                src={previewImageUrl} 
+                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" 
+                controls 
+                autoPlay 
+              />
+            ) : (
+              <img 
+                src={previewImageUrl} 
+                alt="enlarged review snap" 
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl pointer-events-none" 
+                referrerPolicy="no-referrer"
+              />
+            )}
           </div>
         </div>
       )}

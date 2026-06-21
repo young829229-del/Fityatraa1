@@ -3,11 +3,12 @@
 
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-montserrat: "Montserrat", "Inter", sans-serif;
+  --font-display: "Montserrat", sans-serif;
   --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", monospace;
   --font-quattrocento: "Quattrocento Sans", sans-serif;
-  --font-geometric: "Poppins", "Outfit", "Sora", "Montserrat", sans-serif;
+  --font-geometric: "Montserrat", "Poppins", "Outfit", "Sora", sans-serif;
   --font-poppins: "Poppins", sans-serif;
   
   --color-[#F9F7F2]: #F9F7F2;

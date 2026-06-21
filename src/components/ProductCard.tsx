@@ -89,7 +89,7 @@ export default function ProductCard({
             {/* Styled Gold/Black fish oil container */}
             <div className="w-26 h-36 bg-gray-950 border border-amber-500 rounded-lg shadow-lg flex flex-col justify-between p-2 relative">
               <div className="w-26 h-4 bg-black absolute -top-1 left-0 rounded-t-sm border-b border-amber-500/50 flex justify-center">
-                <div className="w-2 h-2 rounded-full bg-amber-400 mt-1 animate-pulse"></div>
+                <div className="w-2 h-2 rounded-full bg-amber-400 mt-1"></div>
               </div>
               <div className="text-center mt-4 z-10">
                 <span className="text-[6px] font-bold text-amber-400 block leading-none font-display">MUSCLEBLAZE</span>
@@ -194,18 +194,27 @@ export default function ProductCard({
   return (
     <div
       id={`product-card-${product.id}`}
-      className="group bg-white rounded-none border border-[#1A1A1A]/10 hover:border-black/40 hover:shadow-editorial transition-all duration-300 flex flex-col overflow-hidden relative"
+      className="group bg-white rounded-none border border-[#1A1A1A]/10 hover:border-black transition-all duration-300 flex flex-col h-full bg-white relative hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] scale-[1.00] hover:scale-[1.01]"
     >
-      {/* Ribbon Banner - Editorial Flat rectangular badge */}
-      {product.isSoldOut ? (
-        <span className="absolute top-3 left-3 bg-zinc-900 border border-zinc-800 text-white text-[9px] uppercase font-mono tracking-widest px-2.5 py-1 z-10">
-          Sold out
-        </span>
-      ) : (
-        <span className="absolute top-3 left-3 bg-black text-white text-[9px] font-mono tracking-widest uppercase px-2.5 py-1 z-10">
-          SAVE {product.discountPercentage}%
-        </span>
-      )}
+      {/* Ribbon Banner - Editorial Flat rectangular badges */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1 items-start">
+        {product.isSoldOut ? (
+          <span className="bg-neutral-900 text-white text-[9px] font-mono tracking-widest uppercase font-bold px-2.5 py-1">
+            Sold out
+          </span>
+        ) : (
+          <>
+            <span className="bg-black text-white text-[9px] font-montserrat font-bold tracking-wider uppercase px-2.5 py-1">
+              SAVE {product.discountPercentage}%
+            </span>
+            {(product.id === "wellcore-creatine" || product.id === "myfitness-pb") && (
+              <span className="bg-[#22C55E] text-white text-[9px] font-montserrat font-bold tracking-wider uppercase px-2 px-0.5">
+                🔥 BESTSELLER
+              </span>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Wishlist & Quick View Floating Buttons */}
       <div className="absolute top-3 right-3 z-10 flex gap-1.5 sm:gap-2">
@@ -236,9 +245,9 @@ export default function ProductCard({
         </button>
       </div>
 
-      {/* Styled Physical Bottle representation */}
+      {/* Styled Physical Bottle representation container */}
       <div 
-        className="relative overflow-hidden cursor-pointer" 
+        className="relative overflow-hidden cursor-pointer h-56 sm:h-64 flex items-center justify-center p-4 bg-[#FFFFFF]" 
         onClick={() => onViewDetails(product)}
         title="View Product Details"
       >
@@ -246,68 +255,102 @@ export default function ProductCard({
       </div>
 
       {/* Product Information details */}
-      <div className="p-2 sm:p-3 flex-1 flex flex-col justify-between bg-white">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between bg-white border-t border-[#1A1A1A]/5">
         <div>
           {/* Brand & Stars */}
-          <div className="flex items-center justify-between gap-1 mb-1 border-b border-gray-100 pb-1">
-            <span className="text-[8px] sm:text-[9px] font-mono tracking-widest font-bold text-black uppercase truncate max-w-[80px] sm:max-w-full">
+          <div className="flex items-center justify-between gap-1 mb-1 border-b border-gray-100 pb-1.5">
+            <span className="text-[10px] font-montserrat tracking-widest font-bold text-neutral-400 uppercase truncate max-w-[120px]">
               {product.brand}
             </span>
             <div className="flex items-center gap-1 shrink-0">
-              <Star className="w-3 h-3 fill-black text-black" />
-              <span className="text-[9px] sm:text-[10px] font-mono text-gray-800 font-bold">{rating}</span>
-              <span className="text-[8px] text-gray-400 font-mono">({reviewCount})</span>
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span className="text-[10px] font-mono text-gray-800 font-bold">{rating}</span>
+              <span className="text-[9px] text-gray-400 font-mono">({reviewCount})</span>
             </div>
           </div>
 
-          {/* Product Title - Space Grotesk modern sans-serif style */}
+          {/* Product Title - Full display of name without line clamping to obey full catalog search */}
           <h3
             onClick={() => onViewDetails(product)}
-            className="text-xs sm:text-sm font-display font-bold text-[#1A1A1A] hover:text-gray-600 transition-colors cursor-pointer line-clamp-2 min-h-[2rem] leading-tight mb-1 sm:mb-2"
+            className="text-xs sm:text-sm font-montserrat font-bold text-[#111111] hover:text-neutral-600 transition-colors cursor-pointer leading-snug mb-1 mt-1 block"
           >
             {product.name}
           </h3>
 
+          {/* Stock Indicator alerts */}
+          <div className="my-1.5 flex items-center">
+            {product.isSoldOut ? (
+              <span className="inline-flex items-center text-[9px] font-mono font-medium text-red-500 uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
+                Out of Stock
+              </span>
+            ) : (product.id === "wellcore-creatine" || product.id === "myfitness-pb") ? (
+              <span className="inline-flex items-center text-[9px] font-mono font-semibold text-amber-600 uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                Selling Fast (Only 3 left!)
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[9px] font-mono font-semibold text-[#22C55E] uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] mr-1.5"></span>
+                In Stock & Verified
+              </span>
+            )}
+          </div>
+
           {/* Serving / Nutrition Mini Badges - Clean Flat label style */}
-          <div className="flex flex-wrap gap-1 mb-1.5 sm:mb-2 text-left">
+          <div className="flex flex-wrap gap-1 mb-2.5 text-left">
             {product.servings && (
-              <span className="text-[7px] sm:text-[8px] font-mono bg-gray-50 text-gray-600 px-1.5 sm:px-2 py-0.5 border border-gray-200">
+              <span className="text-[8px] sm:text-[9px] font-mono tracking-wider bg-neutral-100 text-neutral-600 px-2 py-0.5 border border-neutral-200">
                 {product.servings}
+              </span>
+            )}
+            {product.servingSize && (
+              <span className="text-[8px] sm:text-[9px] font-mono tracking-wider bg-neutral-50 text-neutral-500 px-2 py-0.5 border border-neutral-200">
+                Size: {product.servingSize}
               </span>
             )}
           </div>
         </div>
 
         {/* Action Bottom (Price and Add/View buttons) */}
-        <div>
-          <div className="flex items-baseline flex-wrap gap-1 mb-2 sm:mb-2.5 border-t border-gray-100 pt-2">
-            <span className="text-sm sm:text-base font-geometric font-black text-black">
-              Rs. {product.price.toLocaleString()}
-            </span>
-            <span className="text-[9px] sm:text-[10px] text-gray-400 line-through font-geometric ml-1 font-semibold">
-              Rs. {product.originalPrice.toLocaleString()}
-            </span>
+        <div className="mt-auto">
+          <div className="border-t border-[#1A1A1A]/5 pt-2.5 mb-2.5">
+            <div className="flex items-baseline flex-wrap gap-1.5">
+              <span className="text-sm sm:text-base font-montserrat font-bold text-[#111111]">
+                Rs. {product.price.toLocaleString()}
+              </span>
+              {product.originalPrice > product.price && (
+                <>
+                  <span className="text-[10px] sm:text-xs text-neutral-400 line-through font-montserrat">
+                    Rs. {product.originalPrice.toLocaleString()}
+                  </span>
+                  <div className="w-full text-[9px] font-montserrat font-semibold text-[#22C55E] mt-0.5">
+                    👉 You Save Rs. {(product.originalPrice - product.price).toLocaleString()}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {product.isSoldOut ? (
             <button
               disabled
-              className="w-full py-1.5 sm:py-2 px-2 bg-zinc-100 text-zinc-400 border border-zinc-200 text-[8px] sm:text-[9px] font-mono uppercase tracking-widest cursor-not-allowed"
+              className="w-full py-2 px-2 bg-neutral-100 text-neutral-400 border border-neutral-200 text-[10px] font-montserrat font-bold uppercase tracking-widest cursor-not-allowed"
             >
-              Sold out
+              Sold out (Save to Wishlist)
             </button>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-1 sm:gap-1.5">
+            <div className="grid grid-cols-5 gap-1.5">
               <button
                 onClick={() => onAddToCart(product)}
-                className="cursor-pointer flex-1 py-1.5 sm:py-2 px-2 bg-[#1A1A1A] hover:bg-gray-800 text-white text-[8px] sm:text-[9px] font-mono uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-1.5"
+                className="cursor-pointer col-span-3 py-2 px-2 bg-black hover:bg-neutral-800 text-white text-[9px] sm:text-[10px] font-montserrat font-bold uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-1.5"
               >
-                <ShoppingCart className="w-2.5 h-2.5 sm:w-3 sm:h-3 hidden sm:block" />
-                <span>Add</span>
+                <ShoppingCart className="w-3 h-3" />
+                <span>BAG +</span>
               </button>
               <button
                 onClick={() => onViewDetails(product)}
-                className="cursor-pointer py-1.5 sm:py-2 px-2 sm:px-3 bg-white border border-[#1A1A1A]/20 hover:border-[#1A1A1A] hover:bg-gray-50 text-[#1A1A1A] text-[8px] sm:text-[9px] font-mono uppercase tracking-wide transition-all text-center"
+                className="cursor-pointer col-span-2 py-2 px-1 bg-white border border-[#1A1A1A]/20 hover:border-black text-[#111111] text-[9px] sm:text-[10px] font-montserrat font-bold uppercase tracking-wider transition-all text-center"
                 title="View specs & details"
               >
                 Specs

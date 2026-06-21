@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Plus, Minus, Trash2, Ticket, MapPin, ShoppingBag, ArrowRight, ShieldCheck, Sparkles, Check } from "lucide-react";
 import { CartItem, Product } from "../types";
 import { NEPAL_REGIONS } from "../data";
+import { loadPaymentSettings, PaymentSettings } from "../lib/paymentSettings";
 
 interface CartDrawerProps {
   onClose: () => void;
@@ -27,6 +28,36 @@ export default function CartDrawer({
   const [checkoutPhone, setCheckoutPhone] = useState("");
   const [checkoutAddress, setCheckoutAddress] = useState("");
   const [formError, setFormError] = useState("");
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(() => loadPaymentSettings());
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "esewa" | "khalti">("cod");
+
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      const fresh = loadPaymentSettings();
+      setPaymentSettings(fresh);
+      // Auto-adjust default fallback if current is disabled
+      if (paymentMethod === "cod" && !fresh.isCodEnabled) {
+        if (fresh.isEsewaEnabled) setPaymentMethod("esewa");
+        else if (fresh.isKhaltiEnabled) setPaymentMethod("khalti");
+      } else if (paymentMethod === "esewa" && !fresh.isEsewaEnabled) {
+        if (fresh.isCodEnabled) setPaymentMethod("cod");
+        else if (fresh.isKhaltiEnabled) setPaymentMethod("khalti");
+      } else if (paymentMethod === "khalti" && !fresh.isKhaltiEnabled) {
+        if (fresh.isCodEnabled) setPaymentMethod("cod");
+        else if (fresh.isEsewaEnabled) setPaymentMethod("esewa");
+      }
+    };
+    
+    // Set initial correct default
+    const currentSettings = loadPaymentSettings();
+    if (!currentSettings.isCodEnabled) {
+      if (currentSettings.isEsewaEnabled) setPaymentMethod("esewa");
+      else if (currentSettings.isKhaltiEnabled) setPaymentMethod("khalti");
+    }
+
+    window.addEventListener("fityatra_payment_settings_updated", handleSettingsUpdate);
+    return () => window.removeEventListener("fityatra_payment_settings_updated", handleSettingsUpdate);
+  }, [paymentMethod]);
 
   // Calculate prices helper
   const itemsSubtotal = cart.reduce((sub, item) => sub + (item.product.price * item.quantity), 0);
@@ -74,6 +105,7 @@ export default function CartDrawer({
       coordinates: null,
       region: shippingRegion,
       total: grandTotal,
+      paymentMode: paymentMethod.toUpperCase(),
       items: cart.map((item) => ({
         name: item.product.name,
         quantity: item.quantity,
@@ -88,7 +120,7 @@ export default function CartDrawer({
         hour12: true,
       }),
       shippingPartner: shippingRegion === "ktm" ? "Upaya CityCargo Partner" : "Nepal Can Move (NCM)",
-      notes: "Newly placed supplementation stack! Preparing authenticity verification scratch code.",
+      notes: `Newly placed supplementation stack via ${paymentMethod.toUpperCase()}! Preparing authenticity verification scratch code.`,
     };
 
     try {
@@ -228,11 +260,28 @@ Sent via FitYatra Applet Dispatcher`;
 
                         {/* Quantity Display */}
                         <div className="flex justify-between items-center mt-3 bg-neutral-50 px-2.5 py-1.5 border border-dashed border-neutral-200">
-                          <span className="text-[10px] uppercase font-mono font-bold text-emerald-600 block">
-                            Quantity: 1 (Client Quota)
-                          </span>
+                          <div className="flex items-center gap-2 select-none">
+                            <span className="text-[10px] uppercase font-mono font-bold text-neutral-500 block">
+                              Qty:
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button 
+                                onClick={() => onUpdateQuantity(item.product.id, -1)}
+                                className="cursor-pointer w-5 h-5 bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center text-xs font-bold text-black border border-neutral-300 rounded"
+                              >
+                                -
+                              </button>
+                              <span className="text-xs font-bold px-1.5 font-montserrat">{item.quantity}</span>
+                              <button 
+                                onClick={() => onUpdateQuantity(item.product.id, 1)}
+                                className="cursor-pointer w-5 h-5 bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center text-xs font-bold text-black border border-neutral-300 rounded"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
                           <span className="text-xs font-geometric font-extrabold text-[#1A1A1A]">
-                            Rs. {item.product.price.toLocaleString()}
+                            Rs. {(item.product.price * item.quantity).toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -344,6 +393,123 @@ Sent via FitYatra Applet Dispatcher`;
                     />
                   </div>
 
+                  {/* SELECT SUPREME PAYMENT CHANNELS */}
+                  <div className="space-y-2 pt-2">
+                    <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest block">
+                      💵 Select Payment Method
+                    </label>
+                    <div className="flex flex-col gap-1.5">
+                      {paymentSettings.isCodEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod("cod")}
+                          className={`w-full py-2.5 px-3 border text-left transition-all cursor-pointer flex items-center justify-between ${
+                            paymentMethod === "cod"
+                              ? "border-black bg-black text-white font-bold"
+                              : "border-neutral-250 bg-white hover:bg-neutral-50 text-neutral-800"
+                          } uppercase font-mono text-[9px]`}
+                        >
+                          <span>💵 Cash on Delivery (COD)</span>
+                          {paymentMethod === "cod" && <Check className="w-3.5 h-3.5 text-[#FFCD00]" />}
+                        </button>
+                      )}
+                      {paymentSettings.isEsewaEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod("esewa")}
+                          className={`w-full py-2.5 px-3 border text-left transition-all flex items-center justify-between cursor-pointer ${
+                            paymentMethod === "esewa"
+                              ? "border-[#60BB46] bg-[#60BB46] text-white font-bold"
+                              : "border-neutral-250 bg-white hover:bg-[#60BB46]/5 text-neutral-800"
+                          } uppercase font-mono text-[9px]`}
+                        >
+                          <span className={paymentMethod === "esewa" ? "text-white" : "text-[#60BB46] font-extrabold"}>🟢 Pay via eSewa Scan & Pay</span>
+                          {paymentMethod === "esewa" && <Check className="w-3.5 h-3.5 text-white" />}
+                        </button>
+                      )}
+                      {paymentSettings.isKhaltiEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod("khalti")}
+                          className={`w-full py-2.5 px-3 border text-left transition-all flex items-center justify-between cursor-pointer ${
+                            paymentMethod === "khalti"
+                              ? "border-[#5C2D91] bg-[#5C2D91] text-white font-bold"
+                              : "border-neutral-250 bg-white hover:bg-[#5C2D91]/5 text-neutral-800"
+                          } uppercase font-mono text-[9px]`}
+                        >
+                          <span className={paymentMethod === "khalti" ? "text-white" : "text-[#5C2D91] font-extrabold"}>🟣 Pay via Khalti Portal/QR</span>
+                          {paymentMethod === "khalti" && <Check className="w-3.5 h-3.5 text-white" />}
+                        </button>
+                      )}
+                    </div>
+
+                    {paymentMethod === "esewa" && paymentSettings.isEsewaEnabled && (
+                      <div className="text-[10px] bg-[#60BB46]/5 p-3 border border-[#60BB46]/20 space-y-2 animate-fade-in">
+                        <p className="text-[#60BB46] font-semibold">
+                          🟢 Scan & Pay instantly using your eSewa App.
+                        </p>
+                        
+                        {paymentSettings.esewaQrUrl && (
+                          <div className="flex flex-col items-center justify-center p-2 bg-white border border-[#4ca433]/20 rounded shadow-xs max-w-[160px] mx-auto">
+                            <img 
+                              src={paymentSettings.esewaQrUrl} 
+                              alt="eSewa Payment QR" 
+                              className="w-full h-auto object-contain border-0"
+                            />
+                            <span className="text-[8px] font-mono text-neutral-400 mt-1 uppercase tracking-wider text-center block">SCAN TO PAY</span>
+                          </div>
+                        )}
+
+                        <div className="bg-white p-2 border border-neutral-100 font-mono text-[9px] space-y-1 text-center">
+                          <p className="text-gray-600">Account Name: <span className="font-bold text-black">{paymentSettings.esewaAccountName}</span></p>
+                          <p className="text-gray-600">eSewa ID/Mobile: <span className="font-bold text-black">{paymentSettings.esewaAccountNumber}</span></p>
+                        </div>
+
+                        <p className="text-gray-500 font-serif text-[9px] text-center italic">
+                          Please transfer the exact Grand Total and take a screenshot of your success receipt.
+                        </p>
+                      </div>
+                    )}
+
+                    {paymentMethod === "khalti" && paymentSettings.isKhaltiEnabled && (
+                      <div className="text-[10px] bg-[#5C2D91]/5 p-3 border border-[#5C2D91]/20 space-y-2 animate-fade-in">
+                        <p className="text-[#5C2D91] font-semibold">
+                          🟣 Scan QR or Transfer using Khalti App.
+                        </p>
+
+                        {paymentSettings.khaltiQrUrl ? (
+                          <div className="flex flex-col items-center justify-center p-2 bg-white border border-[#5C2D91]/20 rounded shadow-xs max-w-[160px] mx-auto">
+                            <img 
+                              src={paymentSettings.khaltiQrUrl} 
+                              alt="Khalti Payment QR" 
+                              className="w-full h-auto object-contain border-0"
+                            />
+                            <span className="text-[8px] font-mono text-neutral-400 mt-1 uppercase tracking-wider text-center block">SCAN TO PAY</span>
+                          </div>
+                        ) : (
+                          <p className="text-[#5C2D91] text-[9px] italic">
+                            Receive OTP or transfer manually to our secure Khalti coordinates:
+                          </p>
+                        )}
+
+                        <div className="bg-white p-2 border border-neutral-100 font-mono text-[9px] space-y-1 text-center">
+                          <p className="text-gray-600">Account Name: <span className="font-bold text-black">{paymentSettings.khaltiAccountName}</span></p>
+                          <p className="text-gray-600">Khalti ID/Mobile: <span className="font-bold text-black">{paymentSettings.khaltiAccountNumber}</span></p>
+                        </div>
+
+                        <p className="text-gray-500 font-serif text-[9px] text-center italic">
+                          Ensure screenshot is captured and verified upon product dispatch.
+                        </p>
+                      </div>
+                    )}
+
+                    {paymentMethod === "cod" && paymentSettings.isCodEnabled && (
+                      <p className="text-[10px] text-gray-600 font-serif italic bg-neutral-50 p-2.5 border border-neutral-200 animate-fade-in">
+                        {paymentSettings.codInstructions}
+                      </p>
+                    )}
+                  </div>
+
                   {formError && (
                     <p className="text-[10px] font-mono text-xs font-semibold text-red-650 m-0">{formError}</p>
                   )}
@@ -352,10 +518,10 @@ Sent via FitYatra Applet Dispatcher`;
                 <button
                   type="button"
                   onClick={handleCheckoutSubmit}
-                  className="cursor-pointer w-full py-3.5 bg-[black] hover:bg-[#1A1A1A] text-white font-mono uppercase tracking-widest text-xs rounded-none flex items-center justify-center gap-1.5 shadow-xs transition-colors duration-200"
+                  className="cursor-pointer w-full py-3.5 bg-[black] hover:bg-neutral-900 text-white font-montserrat font-bold uppercase tracking-widest text-xs rounded-none flex items-center justify-center gap-1.5 shadow-xs transition-colors duration-200"
                 >
-                  <span>Lock & Dispatch My Order</span>
-                  <ArrowRight className="w-4 h-4 text-white" />
+                  <span>CHECKOUT</span>
+                  <ArrowRight className="w-4 h-4 text-white animate-pulse" />
                 </button>
               </div>
 
@@ -402,12 +568,20 @@ Sent via FitYatra Applet Dispatcher`;
               </div>
               <div className="flex justify-between">
                 <span>Payment Mode</span>
-                <span className="bg-[#1A1A1A] text-[#FAFAFA] px-1.5 py-0.5 text-[8px] font-mono tracking-widest uppercase font-bold">CASH ON DELIVERY (COD)</span>
+                <span className={`px-1.5 py-0.5 text-[8px] font-mono tracking-widest uppercase font-bold text-white ${
+                  paymentMethod === "esewa" ? "bg-[#60BB46]" : paymentMethod === "khalti" ? "bg-[#5C2D91]" : "bg-black"
+                }`}>
+                  {paymentMethod === "esewa" ? "eSewa Portal" : paymentMethod === "khalti" ? "Khalti Gateway" : "Cash On Delivery (COD)"}
+                </span>
               </div>
             </div>
 
             <div className="text-[10px] text-gray-700 font-mono uppercase tracking-wider bg-[#FAFAFA] p-2.5 rounded-none border border-[#1A1A1A]/10 mb-5 leading-relaxed">
-              📞 Our dispatch crew will call/SMS you shortly on <span className="underline font-bold text-[black]">{checkoutPhone}</span> to confirm your exact door location details.
+              {paymentMethod === "cod" ? (
+                <span>📞 Our dispatch crew will call/SMS you shortly on <span className="underline font-bold text-[black]">{checkoutPhone}</span> to confirm your exact door location details.</span>
+              ) : (
+                <span>⚡ Payment verified! Your automated verification receipt key has been generated. Our dispatch crew will call <span className="underline font-bold text-black">{checkoutPhone}</span> for dispatch tracking.</span>
+              )}
             </div>
 
             <div className="space-y-2">

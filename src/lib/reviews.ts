@@ -7,6 +7,7 @@ export interface UserReview {
   rating: number;
   comment: string;
   images: string[]; // Base64 or URL strings
+  videos?: string[]; // Base64 or URL strings for mp4 videos
   date: string;
   verified: boolean;
   isUserAdded?: boolean;

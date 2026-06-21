@@ -1,11 +1,10 @@
 import React from "react";
-import { Search, ShoppingBag, Truck, Heart } from "lucide-react";
+import { Search, ShoppingBag, Truck, Heart, ShieldCheck } from "lucide-react";
 import { CartItem } from "../types";
 
 interface NavbarProps {
   cart: CartItem[];
   onOpenCart: () => void;
-  onOpenAdvisor: () => void;
   activeSection: string;
   onNavigate: (section: string) => void;
   wishlistCount: number;
@@ -15,7 +14,6 @@ interface NavbarProps {
 export default function Navbar({
   cart,
   onOpenCart,
-  onOpenAdvisor,
   activeSection,
   onNavigate,
   wishlistCount,
@@ -74,6 +72,15 @@ export default function Navbar({
             >
               Track Order
             </button>
+            <button
+              id="nav-btn-admin"
+              onClick={() => onNavigate("admin")}
+              className={`cursor-pointer text-[10px] font-sans font-bold uppercase tracking-widest transition-colors ${
+                activeSection === "admin" ? "font-extrabold text-amber-500 hover:text-amber-600" : "text-neutral-400 hover:text-black"
+              }`}
+            >
+              Admin Portal
+            </button>
           </nav>
         </div>
 
@@ -90,11 +97,13 @@ export default function Navbar({
           </button>
 
           <button
-            id="nav-advisor-trigger"
-            onClick={onOpenAdvisor}
-            className="cursor-pointer text-xs font-sans font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors hidden sm:block"
+            onClick={() => onNavigate("admin")}
+            className={`p-2 cursor-pointer transition-colors block md:hidden ${
+              activeSection === "admin" ? "text-amber-500" : "text-gray-400 hover:text-black"
+            }`}
+            title="Admin Portal"
           >
-            AI Coach
+            <ShieldCheck className="w-5 h-5" />
           </button>
 
           <button
