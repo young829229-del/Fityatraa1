@@ -1,5 +1,5 @@
 import React from "react";
-import { Star, ShoppingCart, Eye, Sparkles } from "lucide-react";
+import { Star, ShoppingCart, Eye, Sparkles, Heart } from "lucide-react";
 import { Product } from "../types";
 import { getProductStats } from "../lib/reviews";
 
@@ -7,12 +7,16 @@ interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product) => void;
   onViewDetails: (product: Product) => void;
+  isWishlisted?: boolean;
+  onToggleWishlist?: (product: Product) => void;
 }
 
 export default function ProductCard({
   product,
   onAddToCart,
   onViewDetails,
+  isWishlisted = false,
+  onToggleWishlist,
 }: ProductCardProps) {
   // Fetch dynamic rating stats
   const { rating, reviewCount } = getProductStats(product);
@@ -203,14 +207,32 @@ export default function ProductCard({
         </span>
       )}
 
-      {/* Quick View Floating Button */}
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex gap-2">
+      {/* Wishlist & Quick View Floating Buttons */}
+      <div className="absolute top-3 right-3 z-10 flex gap-1.5 sm:gap-2">
+        {product.isSoldOut && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleWishlist) {
+                onToggleWishlist(product);
+              }
+            }}
+            className={`cursor-pointer p-2 border transition-all duration-200 outline-none rounded-none shadow-sm flex items-center justify-center ${
+              isWishlisted
+                ? "bg-[#FFEBEB] text-red-600 border-red-300 scale-105"
+                : "bg-white/95 hover:bg-black hover:text-white text-black border-[#1A1A1A]/10"
+            }`}
+            title={isWishlisted ? "Remove from Saved" : "Save for later"}
+          >
+            <Heart className={`w-3.5 h-3.5 ${isWishlisted ? "fill-red-600 text-red-600" : ""}`} />
+          </button>
+        )}
         <button
           onClick={() => onViewDetails(product)}
-          className="cursor-pointer p-2 bg-white hover:bg-black hover:text-white border border-[#1A1A1A]/20 transition-all duration-200"
+          className="cursor-pointer p-2 bg-white/95 hover:bg-black hover:text-white border border-[#1A1A1A]/10 shadow-sm transition-all duration-200 hidden sm:block md:opacity-0 md:group-hover:opacity-100"
           title="Quick View Details"
         >
-          <Eye className="w-4 h-4" />
+          <Eye className="w-3.5 h-3.5" />
         </button>
       </div>
 

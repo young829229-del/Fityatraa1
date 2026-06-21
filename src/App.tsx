@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
 import ProductDetailModal from "./components/ProductDetailModal";
 import CartDrawer from "./components/CartDrawer";
+import WishlistDrawer from "./components/WishlistDrawer";
 import FitnessAdvisor from "./components/FitnessAdvisor";
 import ReviewsSlider from "./components/ReviewsSlider";
 import FAQSection from "./components/FAQSection";
@@ -31,6 +32,24 @@ export default function App() {
     }
   }, [cart]);
 
+  // Wishlist persistent storage state engine
+  const [wishlist, setWishlist] = useState<Product[]>(() => {
+    try {
+      const persisted = localStorage.getItem("fityatra_saved_wishlist");
+      return persisted ? JSON.parse(persisted) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("fityatra_saved_wishlist", JSON.stringify(wishlist));
+    } catch (e) {
+      console.error("Failed to save wishlist to localStorage", e);
+    }
+  }, [wishlist]);
+
   const [activeTab, setActiveTab] = useState<string>("home");
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("All");
   const [catalogSearchQuery, setCatalogSearchQuery] = useState<string>("");
@@ -38,6 +57,7 @@ export default function App() {
   
   // Toggles draw models
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
   const [selectedProductDetails, setSelectedProductDetails] = useState<Product | null>(null);
 
@@ -54,6 +74,29 @@ export default function App() {
     setTimeout(() => {
       setSuccessToast(null);
     }, 3000);
+  };
+
+  // Wishlist Action Handlers
+  const handleToggleWishlist = (product: Product) => {
+    setWishlist((prev) => {
+      const exists = prev.some((p) => p.id === product.id);
+      if (exists) {
+        triggerToast(`Removed ${product.brand} from saved wishlist`);
+        return prev.filter((p) => p.id !== product.id);
+      } else {
+        if (!product.isSoldOut) {
+          triggerToast(`Wishlist saving is only available for out-of-stock products!`);
+          return prev;
+        }
+        triggerToast(`Saved ${product.brand} to wishlist!`);
+        return [...prev, product];
+      }
+    });
+  };
+
+  const handleRemoveFromWishlist = (product: Product) => {
+    setWishlist((prev) => prev.filter((p) => p.id !== product.id));
+    triggerToast(`Removed ${product.brand} from saved wishlist`);
   };
 
   // Add Supplement to Shopping Cart
@@ -145,8 +188,8 @@ export default function App() {
         onOpenAdvisor={() => setIsAdvisorOpen(true)}
         activeSection={activeTab}
         onNavigate={handleSectionNavigation}
-        searchQuery={catalogSearchQuery}
-        onSearchChange={setCatalogSearchQuery}
+        wishlistCount={wishlist.length}
+        onOpenWishlist={() => setIsWishlistOpen(true)}
       />
 
       {/* Dynamic Slide Toast Notification Popup */}
@@ -184,44 +227,21 @@ export default function App() {
             <span className="text-[10px] font-mono font-bold tracking-widest text-black uppercase block bg-white border border-[#1A1A1A]/10 px-3 py-1 rounded-none w-fit mx-auto mb-2">
               Authentic Supplement Range
             </span>
-            <h2 className="text-2xl sm:text-3xl font-serif italic text-gray-900 font-black tracking-tight mb-2 uppercase">
+            <h2 className="text-2xl sm:text-3xl font-geometric font-semibold text-neutral-900 tracking-tight mb-2">
               Our Most Loved Products
             </h2>
-            <p className="text-xs sm:text-sm text-gray-650 font-sans">
-              Know what healthy people inside Nepal are consuming daily. 100% authentic barcode verified.
+            <p className="text-sm sm:text-base text-gray-500 font-geometric tracking-normal leading-relaxed max-w-sm sm:max-w-md mx-auto">
+              Know what healthy people are consuming daily.
             </p>
           </div>
 
-          {/* Filtering Control Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 border-b border-[#1A1A1A]/10 pb-6 mb-8 text-xs">
-            
-            {/* Keyword product search input */}
-            <div className="relative w-full max-w-sm">
-              <Search className="w-3.5 h-3.5 text-gray-450 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search supplements (e.g. Wellcore)..."
-                value={catalogSearchQuery}
-                onChange={(e) => setCatalogSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-12 py-2.5 bg-white border border-[#1A1A1A]/20 rounded-none text-xs focus:outline-none focus:border-black placeholder:text-gray-400 font-sans"
-              />
-              {catalogSearchQuery && (
-                <button
-                  onClick={() => setCatalogSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-neutral-500 font-mono text-[9px] font-bold uppercase tracking-widest cursor-pointer"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
 
-          </div>
 
           {/* CATALOG GRID CARDS */}
           {filteredProductsByFilters.length === 0 ? (
             <div className="text-center py-16 p-8 bg-[#FAFAFA] border border-[#1A1A1A]/10 rounded-none max-w-md mx-auto">
               <Dumbbell className="w-10 h-10 text-gray-300 mx-auto mb-3 animate-pulse" />
-              <h3 className="text-sm font-bold text-gray-750 font-serif italic text-gray-900 tracking-tight">No supplements match your criteria</h3>
+              <h3 className="text-sm font-bold text-gray-750 font-display text-gray-900 tracking-tight">No supplements match your criteria</h3>
               <p className="text-xs text-gray-550 mt-1 max-w-sm mb-4 font-sans leading-relaxed">
                 We're currently importing more premium protein isolates, creatine options, and workout boosters. Try searching other criteria or reset filters!
               </p>
@@ -243,6 +263,8 @@ export default function App() {
                   product={prod}
                   onAddToCart={handleAddToCart}
                   onViewDetails={(p) => setSelectedProductDetails(p)}
+                  isWishlisted={wishlist.some((w) => w.id === prod.id)}
+                  onToggleWishlist={handleToggleWishlist}
                 />
               ))}
             </div>
@@ -429,6 +451,8 @@ export default function App() {
             handleAddToCart(prod, qty);
             setIsCartOpen(true);
           }}
+          isWishlisted={wishlist.some((w) => w.id === selectedProductDetails.id)}
+          onToggleWishlist={handleToggleWishlist}
         />
       )}
 
@@ -444,6 +468,17 @@ export default function App() {
             setDirectSearchId(id);
             handleSectionNavigation("track");
           }}
+        />
+      )}
+
+      {/* OVERLAY DRAWER: Saved Wishlist sidebar */}
+      {isWishlistOpen && (
+        <WishlistDrawer
+          onClose={() => setIsWishlistOpen(false)}
+          wishlist={wishlist}
+          onRemoveFromWishlist={handleRemoveFromWishlist}
+          onAddToCart={handleAddToCart}
+          onViewProductDetails={(p) => setSelectedProductDetails(p)}
         />
       )}
 

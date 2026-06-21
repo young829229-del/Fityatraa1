@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { 
   X, Star, ShoppingCart, CheckCircle, Info, ShieldCheck, Truck, 
-  Share2, ZoomIn, RotateCcw, Award, Check, Plus, Minus, ChevronLeft, ChevronRight
+  Share2, ZoomIn, RotateCcw, Award, Check, Plus, Minus, ChevronLeft, ChevronRight, Heart
 } from "lucide-react";
 import { Product } from "../types";
 import { 
@@ -18,6 +18,8 @@ interface ProductDetailModalProps {
   onClose: () => void;
   onAddToCart: (product: Product, quantity?: number) => void;
   onBuyNow?: (product: Product, quantity?: number) => void;
+  isWishlisted?: boolean;
+  onToggleWishlist?: (product: Product) => void;
 }
 
 export default function ProductDetailModal({
@@ -25,6 +27,8 @@ export default function ProductDetailModal({
   onClose,
   onAddToCart,
   onBuyNow,
+  isWishlisted = false,
+  onToggleWishlist,
 }: ProductDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"description" | "nutrition" | "reviews">("description");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -476,12 +480,27 @@ export default function ProductDetailModal({
             {/* Desktop Action Add To Cart button row */}
             <div className="hidden sm:block pt-2">
               {product.isSoldOut ? (
-                <button
-                  disabled
-                  className="w-full py-4 bg-neutral-200 text-neutral-450 font-bold rounded-lg text-sm uppercase tracking-widest cursor-not-allowed"
-                >
-                  SOLD OUT
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    disabled
+                    className="w-full py-4 bg-neutral-200 text-neutral-450 font-bold rounded-lg text-sm uppercase tracking-widest cursor-not-allowed"
+                  >
+                    SOLD OUT
+                  </button>
+                  {onToggleWishlist && (
+                    <button
+                      onClick={() => onToggleWishlist(product)}
+                      className={`w-full py-3 hover:scale-[1.01] font-bold rounded-lg text-xs uppercase tracking-widest transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 border ${
+                        isWishlisted
+                          ? "bg-[#FFEBEB] text-red-600 border-red-300 shadow-xs"
+                          : "bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-300 shadow-xs"
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-600" : ""}`} />
+                      <span>{isWishlisted ? "Saved in wish list" : "Save to my wishlist"}</span>
+                    </button>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={() => {
@@ -929,12 +948,28 @@ export default function ProductDetailModal({
         
         <div className="flex gap-2 flex-grow max-w-[240px]">
           {product.isSoldOut ? (
-            <button
-              disabled
-              className="flex-1 py-2.5 px-3 bg-neutral-200 text-neutral-400 font-bold rounded-lg text-xs uppercase tracking-wider text-center cursor-not-allowed"
-            >
-              Sold out
-            </button>
+            <div className="flex gap-2 w-full">
+              <button
+                disabled
+                className="flex-grow py-2.5 px-3 bg-neutral-200 text-neutral-400 font-bold rounded-lg text-xs uppercase tracking-wider text-center cursor-not-allowed"
+              >
+                Sold out
+              </button>
+              {onToggleWishlist && (
+                <button
+                  type="button"
+                  onClick={() => onToggleWishlist(product)}
+                  className={`p-2.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+                    isWishlisted
+                      ? "bg-[#FFEBEB] text-red-600 border-red-300"
+                      : "bg-white text-neutral-800 border-neutral-300 hover:bg-neutral-50"
+                  }`}
+                  title={isWishlisted ? "Remove from Saved" : "Save for later"}
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-600" : ""}`} />
+                </button>
+              )}
+            </div>
           ) : (
             <button 
               type="button"
