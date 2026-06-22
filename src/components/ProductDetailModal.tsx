@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { 
   X, Star, ShoppingCart, CheckCircle, Info, ShieldCheck, Truck, 
-  Share2, ZoomIn, RotateCcw, Award, Check, Plus, Minus, ChevronLeft, ChevronRight, Heart
+  Share2, RotateCcw, Award, Check, Plus, Minus, ChevronLeft, ChevronRight, Heart,
+  ChevronDown, HelpCircle
 } from "lucide-react";
 import { Product } from "../types";
 import { 
@@ -31,6 +32,7 @@ export default function ProductDetailModal({
   onToggleWishlist,
 }: ProductDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"description" | "nutrition" | "reviews">("description");
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [detailQuantity, setDetailQuantity] = useState(1);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
@@ -270,11 +272,8 @@ export default function ProductDetailModal({
         {/* LEFT COLUMN: Clean White Product Image Stage */}
         <div className="w-full md:w-[48%] bg-white p-6 sm:p-10 flex flex-col justify-between items-center border-b md:border-b-0 md:border-r border-neutral-150 shrink-0 select-none">
           {/* Brand header */}
-          <div className="w-full flex justify-between items-center text-neutral-400 mb-2">
-            <button className="p-2 rounded-full border border-neutral-100 bg-neutral-50 hover:bg-neutral-150 transition-colors shadow-xs" title="Zoom Product Image">
-              <ZoomIn className="w-4.5 h-4.5" />
-            </button>
-            <span className="text-[9px] font-mono font-black uppercase tracking-[0.2em] bg-yellow-100 hover:bg-yellow-200 text-[#8B6E02] px-3 py-1 rounded-none">
+          <div className="w-full flex justify-end items-center text-neutral-400 mb-2">
+            <span className="text-[9px] font-mono font-black uppercase tracking-[0.2em] bg-yellow-101 hover:bg-yellow-201 text-[#8B6E02] px-3 py-1 rounded-none">
               {product.brand}
             </span>
           </div>
@@ -285,35 +284,14 @@ export default function ProductDetailModal({
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              onMouseEnter={() => setIsZooming(true)}
-              onMouseLeave={() => setIsZooming(false)}
-              onMouseMove={(e) => {
-                const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - left) / width) * 100;
-                const y = ((e.clientY - top) / height) * 100;
-                setZoomPos({ x, y });
-              }}
-              className="w-full relative flex justify-center items-center aspect-square max-h-[300px] md:max-h-[350px] p-2 overflow-hidden bg-white cursor-zoom-in"
-              title="Hover to Zoom or Swipe left/right on mobile"
+              className="w-full relative flex justify-center items-center aspect-square max-h-[300px] md:max-h-[350px] p-2 overflow-hidden bg-white cursor-default"
+              title="Swipe left/right on mobile"
             >
               <img 
                 src={album[activeImageIndex] && album[activeImageIndex].startsWith("http") ? album[activeImageIndex] : product.image} 
                 alt={`${product.brand} ${product.name}`} 
-                style={isZooming ? {
-                  transform: "scale(1.8)",
-                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                  transition: "transform 0.15s ease-out"
-                } : {
-                  transform: "scale(1)",
-                  transition: "transform 0.3s ease-out"
-                }}
                 className="max-w-full max-h-full object-contain" 
               />
-              
-              {/* Zoom badge indicator */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/75 backdrop-blur-xs text-[8px] text-white font-mono tracking-widest px-2.5 py-0.5 pointer-events-none uppercase">
-                🔍 HOVER TO ZOOM
-              </div>
               
               {/* Manual image slider navigators */}
               {album.length > 1 && (
@@ -642,18 +620,337 @@ export default function ProductDetailModal({
               {/* Dynamic tab contents */}
               <div className="py-4 text-xs text-gray-600 leading-relaxed font-sans min-h-[140px]">
                 {activeTab === "description" && (
-                  <div className="space-y-2.5">
-                    <p className="font-semibold text-neutral-800 text-xs">Aesthetic, High-Fidelity Supplement Formula</p>
-                    <p>{product.description}</p>
-                    {product.goals && product.goals.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-2">
-                        {product.goals.map((g) => (
-                          <span key={g} className="bg-amber-55/10 text-[#8B6E02] font-semibold text-[9px] uppercase tracking-wide px-2 py-0.5 rounded border border-amber-200/50">
-                            Goal: {g}
-                          </span>
-                        ))}
+                  <div className="space-y-6">
+                    <div className="space-y-2.5">
+                      <p className="font-semibold text-neutral-800 text-xs">Aesthetic, High-Fidelity Supplement Formula</p>
+                      <p>{product.description}</p>
+                      {product.goals && product.goals.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-2">
+                          {product.goals.map((g) => (
+                            <span key={g} className="bg-amber-55/10 text-[#8B6E02] font-semibold text-[9px] uppercase tracking-wide px-2 py-0.5 rounded border border-amber-200/50">
+                              Goal: {g}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Rich infographics & scientific info-banners flow */}
+                    {(() => {
+                      const displayImages = [...(product.infoImages || [])];
+                      if (displayImages.length <= 1) {
+                        const galleryItems = product.gallery || [];
+                        galleryItems.forEach(img => {
+                          if (!displayImages.includes(img)) {
+                            displayImages.push(img);
+                          }
+                        });
+                      }
+
+                      return displayImages.length > 0 && (
+                        <div className="border-t border-neutral-150 pt-5 mt-4 space-y-3">
+                          <div className="flex flex-col gap-3">
+                            {displayImages.map((imgUrl, i) => (
+                              <div key={i} className="info-banner-wrapper overflow-hidden rounded-xl border border-neutral-200 bg-white p-1 shadow-xs hover:border-neutral-350 transition-colors">
+                                <img
+                                  src={imgUrl}
+                                  alt={`${product.brand} - details banner ${i + 1}`}
+                                  className="w-full object-contain rounded-lg animate-fade-in"
+                                  referrerPolicy="no-referrer"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    const p = (e.target as HTMLElement).closest('.info-banner-wrapper');
+                                    if (p) {
+                                      (p as HTMLElement).style.display = 'none';
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Got Questions? We've Got Answers! section */}
+                    <div className="border-t border-neutral-150 pt-6 mt-6 space-y-4">
+                      <div className="text-center space-y-1">
+                        <h4 className="font-bold text-neutral-900 text-sm tracking-tight">Got Questions? We've Got Answers!</h4>
+                        <p className="text-[10px] text-neutral-500 font-sans">Everything you need to know about our products and services</p>
                       </div>
-                    )}
+
+                      {/* Accordions */}
+                      <div className="space-y-2">
+                        {/* Q1: Delivery */}
+                        <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
+                          <button
+                            type="button"
+                            onClick={() => setOpenFaqId(openFaqId === "q_delivery" ? null : "q_delivery")}
+                            className="w-full flex items-center justify-between p-3 text-left font-semibold text-neutral-800 text-[11px] hover:bg-neutral-50 transition-colors"
+                          >
+                            <span className="flex items-center gap-2">
+                              <HelpCircle className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                              How long does delivery take?
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 ${openFaqId === "q_delivery" ? "rotate-180" : ""}`} />
+                          </button>
+                          {openFaqId === "q_delivery" && (
+                            <div className="p-3 bg-neutral-50 text-[10px] text-neutral-600 border-t border-neutral-100 leading-relaxed">
+                              Delivering health & peak performance safely is our main focus. Shipping takes <strong className="text-neutral-900">12-48 Hours Nation-Wide</strong>. Kathmandu valley orders typically deliver within 24 hours. Under rare cases of delayed transit or remote locations, it may take 3-5 days.
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Q2: Results */}
+                        <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
+                          <button
+                            type="button"
+                            onClick={() => setOpenFaqId(openFaqId === "q_results" ? null : "q_results")}
+                            className="w-full flex items-center justify-between p-3 text-left font-semibold text-neutral-800 text-[11px] hover:bg-neutral-50 transition-colors"
+                          >
+                            <span className="flex items-center gap-2">
+                              <HelpCircle className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                              What Results will I see?
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 ${openFaqId === "q_results" ? "rotate-180" : ""}`} />
+                          </button>
+                          {openFaqId === "q_results" && (
+                            <div className="p-3 bg-neutral-50 text-[10px] text-neutral-600 border-t border-neutral-100 leading-relaxed space-y-1">
+                              <span>Our formulations prioritize maximum bioavailability and systemic support:</span>
+                              <div className="text-neutral-800 font-medium italic mt-1 space-y-1">
+                                {product.id === "wellcore-creatine" && <p>✓ Accelerated physical strength, muscle tissue fluid volume expansion, and fast high-intensity ATP output.</p>}
+                                {product.id === "muscleblaze-lcarnitine" && <p>✓ Accelerated calorie and thermal fatty acid burn. Sustains muscle power and speeds body fat breakdown.</p>}
+                                {product.id === "myfitness-pb" && <p>✓ Steady macro release. 25% protein ensures perfect high-density muscle building blocks and steady fuel.</p>}
+                                {product.id === "muscleblaze-fishoil" && <p>✓ Supports structural cartilage integrity, locks in memory/brain cell vitality, and keeps blood lipids healthy.</p>}
+                                {(!["wellcore-creatine", "muscleblaze-lcarnitine", "myfitness-pb", "muscleblaze-fishoil"].includes(product.id)) && <p>✓ High-caliber cell rehydration, metabolic enzyme support, and accelerated muscle tissue conditioning.</p>}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Q3: Speed */}
+                        <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
+                          <button
+                            type="button"
+                            onClick={() => setOpenFaqId(openFaqId === "q_speed" ? null : "q_speed")}
+                            className="w-full flex items-center justify-between p-3 text-left font-semibold text-neutral-800 text-[11px] hover:bg-neutral-50 transition-colors"
+                          >
+                            <span className="flex items-center gap-2">
+                              <HelpCircle className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                              How quickly does it work?
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 ${openFaqId === "q_speed" ? "rotate-180" : ""}`} />
+                          </button>
+                          {openFaqId === "q_speed" && (
+                            <div className="p-3 bg-neutral-50 text-[10px] text-neutral-600 border-t border-neutral-100 leading-relaxed">
+                              {product.id === "wellcore-creatine" && "Wellcore Micronised Creatine achieves full cellular saturation within 5-7 days of immediate loading or 14 days of sustained daily consumption."}
+                              {product.id === "muscleblaze-lcarnitine" && "Liquid form absorbs rapidly. Take Citrus Splash 25-30 mins prior to physical activity or cardio to initiate energetic fatty acid mobilization."}
+                              {product.id === "myfitness-pb" && "Works immediate as a dense whole-food workout fuel, delivering immediate dietary strength without digestive heaviness."}
+                              {product.id === "muscleblaze-fishoil" && "Omega-3 softgels integrate into joint hydration membranes and brain synapses steadily over 10 to 14 days of constant daily intake."}
+                              {(!["wellcore-creatine", "muscleblaze-lcarnitine", "myfitness-pb", "muscleblaze-fishoil"].includes(product.id)) && "Varies by systemic absorption. High-quality compounds typically initiate muscular and cellular support within 3 to 10 days."}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Q4: Real */}
+                        <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
+                          <button
+                            type="button"
+                            onClick={() => setOpenFaqId(openFaqId === "q_real" ? null : "q_real")}
+                            className="w-full flex items-center justify-between p-3 text-left font-semibold text-neutral-800 text-[11px] hover:bg-neutral-50 transition-colors"
+                          >
+                            <span className="flex items-center gap-2">
+                              <HelpCircle className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                              Is this product real?
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 ${openFaqId === "q_real" ? "rotate-180" : ""}`} />
+                          </button>
+                          {openFaqId === "q_real" && (
+                            <div className="p-3 bg-neutral-50 text-[10px] text-neutral-600 border-t border-neutral-100 leading-relaxed">
+                              <strong className="text-neutral-900">100% Genuine Certified.</strong> Product safety is our cornerstone. We source directly from top-tier global brand representatives or authorized national distributors. Every tub features a proprietary secure scratch authenticity coupon code that you can verify instantly yourself on official brand verification websites or via brand verification SMS lines!
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Product-specific dynamic questions */}
+                        {(() => {
+                          const productFaqs: { q: string; a: string }[] = [];
+                          if (product.id === "wellcore-creatine") {
+                            productFaqs.push(
+                              {
+                                q: "Should I do a loading phase with Wellcore Creatine?",
+                                a: "A loading phase (20g/day split into 4 servings for 5-7 days) saturates muscle tissue fluid and stores super fast. However, a simple 3-5g daily dose is equally effective, achieving optimal saturation in 3-4 weeks. Consistency is key!"
+                              },
+                              {
+                                q: "When is the best time to consume Wellcore Creatine?",
+                                a: "Post-workout is ideal, stacking it with carbohydrate-rich protein shakes to trigger insulin-driven cellular uptake. On rest days, consume it in the morning with a glass of water or breakfast."
+                              },
+                              {
+                                q: "Is it necessary to cycle off Creatine?",
+                                a: "No, cycling is not necessary. Wellcore Micronised Creatine is safe and thoroughly tested for long-term daily consumption to maintain peak muscle hydration, cellular energy, and strength."
+                              }
+                            );
+                          } else if (product.id === "muscleblaze-lcarnitine") {
+                            productFaqs.push(
+                              {
+                                q: "How does Liquid L-Carnitine accelerate fat burn?",
+                                a: "It acts as an active shuttle, transporting long-chain fatty acids into your cell's mitochondria where they are oxidation-burned for direct thermal energy. This aids body fat reduction while preserving lean athletic physical structures."
+                              },
+                              {
+                                q: "Should I take L-Carnitine PRO on an empty stomach?",
+                                a: "Yes! Consuming L-Carnitine PRO roughly 25-30 minutes empty-stomach before aerobic activity, weight-training, or cardio maximizes blood metabolic absorption and thermal conditioning."
+                              }
+                            );
+                          } else if (product.id === "myfitness-pb") {
+                            productFaqs.push(
+                              {
+                                q: "Why is MyFitness Peanut Butter excellent for natural muscle gains?",
+                                a: "Packed with 25% protein and loaded with essential heart-healthy monounsaturated fats, it delivers sustained caloric strength and high-quality macro fuels necessary for hormonal recovery and lean weight build."
+                              },
+                              {
+                                q: "Is there any hydrogenated oil in this peanut butter?",
+                                a: "No! MyFitness uses slow-roasted superior peanuts and contains zero trans-fats, hydrogenated oils, or bad artery-blocking fillers."
+                              }
+                            );
+                          } else if (product.id === "muscleblaze-fishoil") {
+                            productFaqs.push(
+                              {
+                                q: "Will these Omega-3 softgels result in fishy reflux or burps?",
+                                a: "No. MuscleBlaze Fish Oil Gold softgels feature advanced stomach-acids-resistant Enteric Coating. This delays capsule breakdown until it bypasses the stomach, preventing all fishy burps and reflux."
+                              },
+                              {
+                                q: "Is this fish oil verified heavy metal & mercury free?",
+                                a: "Absolutely. Our oil undergoes thorough Molecular Distillation to screen out heavy metals, lead, arsenic, and mercury, ensuring exceptional medical-grade purity and safety."
+                              }
+                            );
+                          }
+
+                          return productFaqs.map((faq, idx) => {
+                            const faqKey = `custom_faq_${idx}`;
+                            const isFaqOpen = openFaqId === faqKey;
+                            return (
+                              <div key={faqKey} className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenFaqId(isFaqOpen ? null : faqKey)}
+                                  className="w-full flex items-center justify-between p-3 text-left font-semibold text-neutral-800 text-[11px] hover:bg-neutral-50 transition-colors"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <HelpCircle className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                                    {faq.q}
+                                  </span>
+                                  <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 ${isFaqOpen ? "rotate-180" : ""}`} />
+                                </button>
+                                {isFaqOpen && (
+                                  <div className="p-3 bg-neutral-50 text-[10px] text-neutral-600 border-t border-neutral-100 leading-relaxed">
+                                    {faq.a}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Aesthetic comparison table matching Image 1 layout exactly */}
+                    <div className="border-t border-neutral-150 pt-5 mt-5 space-y-3.5">
+                      <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-bold text-neutral-400 block">
+                        🛡️ FitYatra Premium Standard vs Typical Shops
+                      </span>
+                      
+                      <div className="border border-neutral-200 rounded-xl overflow-hidden bg-white text-[10px] font-sans">
+                        {/* Section 1: Delivery Time */}
+                        <div className="grid grid-cols-12 border-b border-neutral-150">
+                          {/* Col 1: Metric */}
+                          <div className="col-span-4 bg-white p-3 font-semibold text-neutral-800 flex items-center justify-center text-center border-r border-[#EFEFEF]">
+                            Delivery execution
+                          </div>
+                          {/* Col 2: FitYatra */}
+                          <div className="col-span-4 bg-[#FFFDF6] p-3 text-center flex flex-col items-center justify-center border-r border-[#EFEFEF]">
+                            <span className="text-blue-500 font-bold text-xs mb-1">✓</span>
+                            <span className="font-bold text-neutral-900 text-[10px] leading-tight text-center">12-48 Hours Nation-Wide</span>
+                          </div>
+                          {/* Col 3: Competitor */}
+                          <div className="col-span-4 bg-white p-3 text-center flex flex-col items-center justify-center text-neutral-500">
+                            <span className="text-red-500 font-bold text-xs mb-1">✕</span>
+                            <span className="text-[10px] leading-tight text-center">3-5 Days, delayed orders.</span>
+                          </div>
+                        </div>
+
+                        {/* Section 2 Banner Header: 3. PRODUCT AUTHENTICITY */}
+                        <div className="bg-[#F6F6F6] border-b border-neutral-150 px-3 py-2 flex items-center gap-2 font-bold font-mono tracking-wider text-[9px] uppercase text-neutral-800">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>3. PRODUCT AUTHENTICITY</span>
+                        </div>
+
+                        {/* Section 2 Row Under it */}
+                        <div className="grid grid-cols-12 border-b border-neutral-150">
+                          {/* Col 1 */}
+                          <div className="col-span-4 bg-white p-3 font-semibold text-neutral-800 flex items-center justify-center text-center border-r border-[#EFEFEF]">
+                            Genuine guarantee
+                          </div>
+                          {/* Col 2 */}
+                          <div className="col-span-4 bg-[#FFFDF6] p-3 text-center flex flex-col items-center justify-center border-r border-[#EFEFEF]">
+                            <span className="text-blue-500 font-bold text-xs mb-1">✓</span>
+                            <span className="font-bold text-neutral-900 text-[10px] leading-tight text-center">You Verify the Product Yourself! + Guarantee</span>
+                          </div>
+                          {/* Col 3 */}
+                          <div className="col-span-4 bg-white p-3 text-center flex flex-col items-center justify-center text-neutral-500">
+                            <span className="text-red-500 font-bold text-xs mb-1">✕</span>
+                            <span className="text-[10px] leading-tight text-center">Unknown sourcing, constant doubt.</span>
+                          </div>
+                        </div>
+
+                        {/* Section 3 Banner Header: 4. CUSTOMER SUPPORT */}
+                        <div className="bg-[#F6F6F6] border-b border-neutral-150 px-3 py-2 flex items-center gap-2 font-bold font-mono tracking-wider text-[9px] uppercase text-neutral-800">
+                          <HelpCircle className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                          <span>4. CUSTOMER SUPPORT</span>
+                        </div>
+
+                        {/* Section 3 Row Under it */}
+                        <div className="grid grid-cols-12 border-b border-neutral-150">
+                          {/* Col 1 */}
+                          <div className="col-span-4 bg-white p-3 font-semibold text-neutral-800 flex items-center justify-center text-center border-r border-[#EFEFEF]">
+                            Support availability
+                          </div>
+                          {/* Col 2 */}
+                          <div className="col-span-4 bg-[#FFFDF6] p-3 text-center flex flex-col items-center justify-center border-r border-[#EFEFEF]">
+                            <span className="text-blue-500 font-bold text-xs mb-1">✓</span>
+                            <span className="font-bold text-neutral-900 text-[10px] leading-tight text-center">Immediate, Human Support. Especially After Delivery</span>
+                          </div>
+                          {/* Col 3 */}
+                          <div className="col-span-4 bg-white p-3 text-center flex flex-col items-center justify-center text-neutral-500">
+                            <span className="text-red-500 font-bold text-xs mb-1">✕</span>
+                            <span className="text-[10px] leading-tight text-center">Automated replies, no real help.</span>
+                          </div>
+                        </div>
+
+                        {/* Section 4 Banner Header: 5. RETURN POLICY */}
+                        <div className="bg-[#F6F6F6] border-b border-neutral-150 px-3 py-2 flex items-center gap-2 font-bold font-mono tracking-wider text-[9px] uppercase text-neutral-800">
+                          <RotateCcw className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>5. RETURN POLICY</span>
+                        </div>
+
+                        {/* Section 4 Row Under it */}
+                        <div className="grid grid-cols-12">
+                          {/* Col 1 */}
+                          <div className="col-span-4 bg-white p-3 font-semibold text-neutral-800 flex items-center justify-center text-center border-r border-[#EFEFEF]">
+                            Return window
+                          </div>
+                          {/* Col 2 */}
+                          <div className="col-span-4 bg-[#FFFDF6] p-3 text-center flex flex-col items-center justify-center border-r border-[#EFEFEF]">
+                            <span className="text-blue-500 font-bold text-xs mb-1">✓</span>
+                            <span className="font-bold text-neutral-900 text-[10px] leading-tight text-center">Simple, clear, Easy Returns</span>
+                          </div>
+                          {/* Col 3 */}
+                          <div className="col-span-4 bg-white p-3 text-center flex flex-col items-center justify-center text-neutral-500">
+                            <span className="text-red-500 font-bold text-xs mb-1">✕</span>
+                            <span className="text-[10px] leading-tight text-center font-medium">Confusing rules, high risk policy.</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 

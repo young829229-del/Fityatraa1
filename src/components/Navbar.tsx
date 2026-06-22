@@ -72,15 +72,6 @@ export default function Navbar({
             >
               Track Order
             </button>
-            <button
-              id="nav-btn-admin"
-              onClick={() => onNavigate("admin")}
-              className={`cursor-pointer text-[10px] font-sans font-bold uppercase tracking-widest transition-colors ${
-                activeSection === "admin" ? "font-extrabold text-amber-500 hover:text-amber-600" : "text-neutral-400 hover:text-black"
-              }`}
-            >
-              Admin Portal
-            </button>
           </nav>
         </div>
 
@@ -94,16 +85,6 @@ export default function Navbar({
             title="Track Order"
           >
             <Truck className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={() => onNavigate("admin")}
-            className={`p-2 cursor-pointer transition-colors block md:hidden ${
-              activeSection === "admin" ? "text-amber-500" : "text-gray-400 hover:text-black"
-            }`}
-            title="Admin Portal"
-          >
-            <ShieldCheck className="w-5 h-5" />
           </button>
 
           <button

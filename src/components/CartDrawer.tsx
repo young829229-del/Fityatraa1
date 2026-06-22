@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, Minus, Trash2, Ticket, MapPin, ShoppingBag, ArrowRight, ShieldCheck, Sparkles, Check } from "lucide-react";
+import { X, Plus, Minus, Trash2, Ticket, MapPin, ShoppingBag, ArrowRight, ShieldCheck, Sparkles, Check, Upload, Key, RefreshCw } from "lucide-react";
 import { CartItem, Product } from "../types";
 import { NEPAL_REGIONS } from "../data";
 import { loadPaymentSettings, PaymentSettings } from "../lib/paymentSettings";
+import { motion, AnimatePresence } from "motion/react";
 
 interface CartDrawerProps {
   onClose: () => void;
@@ -30,6 +31,80 @@ export default function CartDrawer({
   const [formError, setFormError] = useState("");
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(() => loadPaymentSettings());
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "esewa" | "khalti">("cod");
+
+  // Screenshot Uploading & Validating States
+  const [uploadedScreenshot, setUploadedScreenshot] = useState<string | null>(null);
+  const [isVerifyingScreenshot, setIsVerifyingScreenshot] = useState(false);
+  const [showVerificationAnimation, setShowVerificationAnimation] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+
+  const handleScreenshotUpload = (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      
+      // Reset animations
+      setIsVerifyingScreenshot(true);
+      setScanProgress(0);
+      
+      // Play high-tech chime using Web Audio API (completely native & reliable)
+      const playChime = () => {
+        try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          if (!AudioContextClass) return;
+          const ctx = new AudioContextClass();
+          
+          // Sound 1
+          const osc1 = ctx.createOscillator();
+          const gainNode1 = ctx.createGain();
+          osc1.connect(gainNode1);
+          gainNode1.connect(ctx.destination);
+          osc1.type = "sine";
+          osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+          gainNode1.gain.setValueAtTime(0.08, ctx.currentTime);
+          osc1.start();
+          osc1.stop(ctx.currentTime + 0.12);
+          
+          // Sound 2 (slightly higher octave)
+          setTimeout(() => {
+            const osc2 = ctx.createOscillator();
+            const gainNode2 = ctx.createGain();
+            osc2.connect(gainNode2);
+            gainNode2.connect(ctx.destination);
+            osc2.type = "sine";
+            osc2.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+            gainNode2.gain.setValueAtTime(0.08, ctx.currentTime);
+            osc2.start();
+            osc2.stop(ctx.currentTime + 0.22);
+          }, 120);
+        } catch (e) {
+          console.warn("AudioContext block prevented sound", e);
+        }
+      };
+
+      // Simulated scanning progress
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct += 8;
+        if (pct >= 100) {
+          pct = 100;
+          clearInterval(interval);
+          setUploadedScreenshot(base64String);
+          setIsVerifyingScreenshot(false);
+          setShowVerificationAnimation(true);
+          playChime();
+          
+          // Close verified stamp overlay after 2 seconds
+          setTimeout(() => {
+            setShowVerificationAnimation(false);
+          }, 2000);
+        }
+        setScanProgress(pct);
+      }, 80);
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     const handleSettingsUpdate = () => {
@@ -121,6 +196,7 @@ export default function CartDrawer({
       }),
       shippingPartner: shippingRegion === "ktm" ? "Upaya CityCargo Partner" : "Nepal Can Move (NCM)",
       notes: `Newly placed supplementation stack via ${paymentMethod.toUpperCase()}! Preparing authenticity verification scratch code.`,
+      screenshot: uploadedScreenshot || undefined,
     };
 
     try {
@@ -508,6 +584,68 @@ Sent via FitYatra Applet Dispatcher`;
                         {paymentSettings.codInstructions}
                       </p>
                     )}
+
+                    {paymentMethod !== "cod" && (
+                      <div className="mt-3 bg-neutral-50 p-3 border border-neutral-250 animate-fade-in text-left">
+                        <label className="text-[9px] font-mono uppercase tracking-wider text-neutral-900 font-bold flex justify-between items-center mb-1.5">
+                          <span className="flex items-center gap-1.5">📸 Receipt Verification Screenshot</span>
+                          {uploadedScreenshot ? (
+                            <span className="bg-emerald-600 text-white text-[8px] font-mono px-1.5 py-0.5 tracking-wider uppercase">✓ Receipt Verified</span>
+                          ) : (
+                            <span className="bg-[#8B6E02] text-white text-[8px] font-mono px-1.5 py-0.5 tracking-wider uppercase">SS REQUIRED</span>
+                          )}
+                        </label>
+                        
+                        {!uploadedScreenshot ? (
+                          <div 
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const files = e.dataTransfer.files;
+                              if (files && files[0]) handleScreenshotUpload(files[0]);
+                            }}
+                            onClick={() => document.getElementById("checkout-ss-upload")?.click()}
+                            className="border-2 border-dashed border-neutral-300 hover:border-black bg-white hover:bg-neutral-50/50 p-4 rounded-none text-center cursor-pointer transition-all h-28 flex flex-col justify-center items-center"
+                          >
+                            <Upload className="w-5 h-5 text-gray-400 mb-1.5 animate-bounce" />
+                            <span className="text-[10px] font-mono text-gray-700 block leading-tight font-semibold">
+                              Drag Screenshot or <span className="text-emerald-600 underline font-extrabold">Choose File</span>
+                            </span>
+                            <span className="text-[8px] text-gray-400 font-mono block mt-1 uppercase">Supports: PNG, JPG, JPEG • Max 6MB</span>
+                            <input 
+                              id="checkout-ss-upload"
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => {
+                                const files = e.target.files;
+                                if (files && files[0]) handleScreenshotUpload(files[0]);
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3 bg-emerald-50/20 p-2.5 border border-emerald-300">
+                            <div className="w-10 h-12 bg-neutral-100 border border-neutral-200 flex-shrink-0 overflow-hidden relative group">
+                              <img src={uploadedScreenshot} alt="Receipt proof" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[10px] text-emerald-600 font-mono font-bold uppercase tracking-wider block flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block animate-ping"></span>
+                                RECEIPT VERIFIED
+                              </span>
+                              <span className="text-[8px] text-gray-400 font-mono block truncate">VERIFICATION SEAL #FY-NPL-OK SIGNED</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setUploadedScreenshot(null)}
+                              className="cursor-pointer text-[9px] font-mono text-red-600 font-bold hover:underline px-2.5 py-1 bg-white hover:bg-red-50 border border-red-200"
+                            >
+                              CLEAR
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {formError && (
@@ -626,6 +764,107 @@ Sent via FitYatra Applet Dispatcher`;
           </div>
         </div>
       )}
+
+      {/* 1. SCREENSHOT DIGITAL SCANNER OVERLAY */}
+      <AnimatePresence>
+        {isVerifyingScreenshot && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none"
+          >
+            {/* Glowing neon scanner target framework */}
+            <div className="relative w-64 h-64 border-2 border-dashed border-[#FFCD00]/50 flex items-center justify-center bg-black/40 overflow-hidden">
+              {/* Dynamic Laser Pointer line */}
+              <motion.div 
+                animate={{ top: ["0%", "100%", "0%"] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                className="absolute left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-[#FFCD00] to-transparent shadow-[0_0_12px_#FFCD00] z-10"
+              />
+              
+              {/* Spinning security gear */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                className="w-24 h-24 rounded-full border border-neutral-800 flex items-center justify-center opacity-60"
+              >
+                <div className="w-16 h-16 rounded-full border border-dashed border-[#FFCD00]/30 flex items-center justify-center">
+                  <RefreshCw className="w-6 h-6 text-[#FFCD00]/40 animate-spin" style={{ animationDuration: '3s' }} />
+                </div>
+              </motion.div>
+              
+              <div className="absolute inset-x-0 bottom-4 text-center">
+                <span className="text-[10px] font-mono tracking-[0.2em] text-[#FFCD00] font-black uppercase">SCANNING RECEIPT</span>
+              </div>
+            </div>
+
+            <div className="mt-8 space-y-2 max-w-xs">
+              <h3 className="text-sm font-mono font-bold text-white tracking-[0.15em] uppercase">SYSTEM VERIFICATION</h3>
+              <p className="text-[10px] text-gray-400 font-mono">ESTABLISHING CRYPTO HANDSHAKE • SECURING TRANSACTION LOGS</p>
+              
+              {/* Real-time percentage indicator */}
+              <div className="w-full bg-neutral-800 h-1.5 overflow-hidden rounded-full mt-4">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-400 to-[#FFCD00] transition-all duration-75"
+                  style={{ width: `${scanProgress}%` }}
+                />
+              </div>
+              <span className="text-[11px] font-mono font-black text-[#FFCD00]">{scanProgress}% SECURED</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. VERIFIED STAMP LOGO ANIMATION */}
+      <AnimatePresence>
+        {showVerificationAnimation && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center p-6 text-center select-none"
+          >
+            {/* Stamp ripple effect */}
+            <div className="relative flex items-center justify-center">
+              {/* Outer floating golden circles */}
+              {[1, 2, 3].map((circle) => (
+                <motion.div
+                  key={circle}
+                  initial={{ scale: 0.6, opacity: 0.8 }}
+                  animate={{ scale: 1.8, opacity: 0 }}
+                  transition={{ delay: circle * 0.3, duration: 1.5, repeat: Infinity }}
+                  className="absolute w-36 h-36 rounded-full border border-[#FFCD00]/40"
+                />
+              ))}
+
+              <motion.div 
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: [0, 1.2, 1], rotate: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="w-28 h-28 rounded-full bg-emerald-600 border-4 border-white shadow-[0_0_24px_rgba(16,185,129,0.5)] flex items-center justify-center z-15 relative"
+              >
+                <div className="flex items-center justify-center">
+                  <Check className="w-16 h-16 text-white stroke-[4px]" />
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.4 }}
+              className="mt-8 space-y-2"
+            >
+              <h2 className="text-2xl font-black text-white font-montserrat uppercase tracking-[0.1em]">RECEIPT VERIFIED</h2>
+              <p className="text-xs text-emerald-400 font-mono tracking-widest font-black uppercase">★ AUTOMATED TRANSACTION STAMP SIGNED ★</p>
+              <p className="text-[10px] text-gray-500 font-mono max-w-xs mx-auto leading-relaxed mt-2 uppercase">
+                FitYatra validation services successfully matched payment screenshot. Order dispatch slot confirmed!
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

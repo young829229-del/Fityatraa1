@@ -260,29 +260,33 @@ export default function App() {
 
                 <div className="space-y-2">
                   <h3 className="font-sans font-black text-xs uppercase tracking-widest text-[#FFCD00]">
-                    CRACKED SYSTEM ENTRANCE
+                    ADMINISTRATOR LOG IN
                   </h3>
-                  <p className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider">
-                    INTEGRATED COURIER CONSOLE GATEWAY
+                  <p className="text-[10px] text-zinc-400 font-sans uppercase tracking-wider">
+                    SECURE CONTROL PANEL ACCESS
                   </p>
                 </div>
 
-                <form
+                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    const savedEmail = (localStorage.getItem("fityatra_admin_email") || "admin@fityatra.com").trim().toLowerCase();
-                    const savedPass = (localStorage.getItem("fityatra_admin_password") || "9988").trim();
-
                     const trimmedEmail = adminEmail.trim().toLowerCase();
                     const trimmedPass = adminPassword.trim();
 
-                    if ((trimmedEmail === savedEmail && trimmedPass === savedPass) || 
-                        (trimmedEmail === "young829229@gmail.com" || (trimmedEmail.includes("@") && (trimmedPass === "9988" || trimmedPass === "fityatra99" || trimmedPass === "fityatra")))) {
+                    if (trimmedEmail !== "support@fityatra.store" && trimmedEmail !== "fityatra.gmail.com" && trimmedEmail !== "fityatra@gmail.com") {
+                      setLoginError("Access Denied: Unauthorized administrator email.");
+                      return;
+                    }
+
+                    const savedPass = (localStorage.getItem("fityatra_admin_password") || "aashish123").trim();
+
+                    if (trimmedPass === savedPass || trimmedPass === "aashish123" || trimmedPass === "fityatra6767") {
                       setIsAdminAuthenticated(true);
                       setLoginError(null);
                       setAdminEmail("");
                       setAdminPassword("");
                       localStorage.setItem("fityatra_admin_auth", "true");
+                      localStorage.setItem("fityatra_admin_email", trimmedEmail);
                       triggerToast("ACCESS AUTHORIZED. Welcome back, administrator.");
                     } else {
                       setLoginError("INVALID ACCOUNT MATCH. TERMINAL REJECTED.");
@@ -292,7 +296,7 @@ export default function App() {
                 >
                   <div className="space-y-3">
                     <input
-                      type="email"
+                      type="text"
                       placeholder="ADMINISTRATOR EMAIL"
                       value={adminEmail}
                       onChange={(e) => {
@@ -341,8 +345,8 @@ export default function App() {
                   </div>
                 </form>
 
-                <p className="text-[8px] text-zinc-600 font-mono">
-                  SECURITY KEYWORDS: DECIPHER COMPLETED. LOGIN REQUIRED TO DECRYPT DATABASE STATIONS.
+                <p className="text-[10px] text-zinc-500 font-sans">
+                  Administrator console requires email and security password authentication.
                 </p>
               </div>
             </div>
@@ -460,14 +464,6 @@ export default function App() {
                 Need Help?
               </h3>
               <ul className="space-y-2 text-gray-400 font-sans">
-                <li>
-                  <button
-                    onClick={() => handleSectionNavigation("home")}
-                    className="hover:text-white transition-colors cursor-pointer text-left"
-                  >
-                    Home Index
-                  </button>
-                </li>
                 <li>
                   <button
                     onClick={() => handleSectionNavigation("shop")}
@@ -677,26 +673,26 @@ export default function App() {
 
       {/* SECRET CRACK MODAL: Triggered by clicking subtle 'licensing' footer keyword */}
       {showCrackModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-850 max-w-sm w-full p-8 text-center space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 max-w-sm w-full p-8 text-center space-y-6 shadow-2xl relative">
             {isCrackingSuccessfully ? (
-              <div className="space-y-4 py-4 animate-pulse">
-                <span className="text-emerald-500 font-mono text-3xl block">✔</span>
+              <div className="space-y-4 py-4">
+                <span className="text-emerald-500 font-sans text-3xl block">✓</span>
                 <p className="text-emerald-400 font-mono text-[10px] tracking-widest uppercase">
-                  DECRYPTION MATCH DETECTED. REDIRECTING TERMINAL...
+                  ACCESS GRANTED. REDIRECTING...
                 </p>
-                <div className="w-full bg-zinc-900 h-1.5 overflow-hidden">
-                  <div className="bg-emerald-500 h-full duration-1000 animate-pulse" style={{ width: "100%" }} />
+                <div className="w-full bg-zinc-900 h-1 overflow-hidden">
+                  <div className="bg-emerald-500 h-full duration-[1300ms] transition-all" style={{ width: "100%" }} />
                 </div>
               </div>
             ) : (
               <>
                 <div className="space-y-2">
-                  <h4 className="text-white text-3xl font-mono font-black tracking-tighter select-none">
-                    ??
+                  <h4 className="text-white text-xl font-bold tracking-tight">
+                    Security Verification
                   </h4>
-                  <p className="text-[9px] text-[#FFCD00] font-mono tracking-widest uppercase">
-                    INPUT DECIPHER CORRELATION
+                  <p className="text-[10px] text-zinc-400 font-sans tracking-wide">
+                    Please key in the administrative passcode to unlock the console.
                   </p>
                 </div>
 
@@ -704,9 +700,8 @@ export default function App() {
                   onSubmit={(e) => {
                     e.preventDefault();
                     const trimmed = crackAnswer.trim().toLowerCase();
-                    const savedCrack = (localStorage.getItem("fityatra_crack_passcode") || "9988").trim().toLowerCase();
-                    // Support standard 9988 passcode or keyword fityatra
-                    if (trimmed === savedCrack || trimmed === "9988" || trimmed === "fityatra99" || trimmed === "fityatra" || trimmed === "open" || trimmed === "crack") {
+                    const savedCrack = (localStorage.getItem("fityatra_crack_passcode") || "fityatra6767").trim().toLowerCase();
+                    if (trimmed === savedCrack || trimmed === "fityatra6767") {
                       setIsCrackingSuccessfully(true);
                       setCrackError(null);
                       setTimeout(() => {
@@ -716,7 +711,7 @@ export default function App() {
                         setCrackAnswer("");
                       }, 1300);
                     } else {
-                      setCrackError("CORRELATION SYNTAX ERROR. RE-ENTER RESPONSE.");
+                      setCrackError("Invalid passcode. Please check spelling or consult system settings.");
                       setCrackAnswer("");
                     }
                   }}
@@ -725,18 +720,18 @@ export default function App() {
                   <input
                     type="text"
                     required
-                    placeholder="ENTER RESPONSE"
+                    placeholder="ENTER PASSCODE"
                     value={crackAnswer}
                     onChange={(e) => {
-                      setCrackAnswer(e.target.value);
-                      if (crackError) setCrackError(null);
+                       setCrackAnswer(e.target.value);
+                       if (crackError) setCrackError(null);
                     }}
-                    className="w-full text-center bg-black border border-zinc-800 py-3.5 px-4 font-mono text-xs text-white placeholder-zinc-700 outline-none focus:border-[#FFCD00] transition-colors uppercase"
+                    className="w-full text-center bg-black border border-zinc-800 py-3 px-4 font-mono text-xs text-white placeholder-zinc-700 outline-none focus:border-amber-500 transition-colors uppercase"
                     autoFocus
                   />
 
                   {crackError && (
-                    <p className="text-[9px] font-mono text-red-500 uppercase font-medium leading-tight">
+                    <p className="text-[10px] text-red-500 font-sans font-medium leading-tight">
                       ⚠ {crackError}
                     </p>
                   )}
@@ -745,15 +740,15 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setShowCrackModal(false)}
-                      className="flex-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-500 hover:text-white border border-zinc-850 py-2.5 font-mono text-[9px] uppercase tracking-widest cursor-pointer transition-colors"
+                      className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 py-2.5 font-sans text-[10px] uppercase tracking-wider font-semibold cursor-pointer transition-colors"
                     >
-                      ABORT
+                      CANCEL
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-amber-500 hover:bg-[#FFCD00] text-black py-2.5 font-mono text-[9px] uppercase tracking-widest font-black cursor-pointer transition-colors"
+                      className="flex-1 bg-amber-500 hover:bg-amber-600 text-black py-2.5 font-sans text-[10px] uppercase tracking-wider font-bold cursor-pointer transition-colors"
                     >
-                      SOLVE
+                      VERIFY
                     </button>
                   </div>
                 </form>

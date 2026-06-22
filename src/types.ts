@@ -17,6 +17,7 @@ export interface Product {
   specs: { [key: string]: string };
   nutritionFacts?: { [key: string]: string };
   gallery?: string[];
+  infoImages?: string[];
 }
 
 export interface CartItem {

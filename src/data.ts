@@ -22,6 +22,11 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/1Y8g5Gxj/Chat-GPT-Image-Dec-21-2025-06-45-02-PM.png",
       "https://i.ibb.co/yF9z3S1N/wellcore-back-cover.jpg"
     ],
+    infoImages: [
+      "https://i.ibb.co/NgnBfYh7/Still-2026-02-21-083921-16-6-1.jpg",
+      "https://i.ibb.co/gbkJ6Ff2/Updated-15-3-2.jpg",
+      "https://i.ibb.co/S4VXxXKk/Still-2026-02-21-083906-10-7-1.jpg"
+    ],
     description: "Unprecedented purity. Wellcore Micronised Creatine Monohydrate fuels muscle protein synthesis, enhances cellular ATP production, and amplifies raw power output during physical training. It dissolves instantly in water and is 100% unflavoured to easily stack with your favorite whey or pre-workouts.",
     servings: "100 Servings",
     servingSize: "3g (300g)",
@@ -60,6 +65,12 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/m5cJ3Qg1/Why-Liquid.jpg",
       "https://i.ibb.co/4nnntKBv/Back.jpg",
       "https://i.ibb.co/WN0Lc4nZ/Back-Side.jpg"
+    ],
+    infoImages: [
+      "https://i.ibb.co/P8Gq2nH/LC-Timeline-3-3-1.jpg",
+      "https://i.ibb.co/YFf6ZfjJ/Info-Graphics-11-11-1.jpg",
+      "https://i.ibb.co/vx43CzM0/Simplfieied-10-12-1.jpg",
+      "https://i.ibb.co/ccYZRfRX/Best-Friend-7-23-1.jpg"
     ],
     description: "Convert fat to fuel with Liquid L-Carnitine. Formulated for maximum nutrient absorption to accelerate metabolism, improve athletic performance, and support weight management.",
     servings: "30 Servings",
@@ -100,6 +111,9 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/b526ggsQ/Originalcrunchylifestyle.jpg",
       "https://i.ibb.co/1fNz1HpY/Original-PBcruchy1250-G-amazon-listingcopy-b10c1b5e-6f7e-4d53-8566-19d8a237869e-1.jpg"
     ],
+    infoImages: [
+      "https://i.ibb.co/sJC60Q3Z/Original-Crunchy-fc59a214-3e4d-41d4-8275-6d6df6692117-1.jpg"
+    ],
     description: "MyFitness Original Crunchy Peanut Butter is packed with 25% clean protein from slow-roasted premium peanuts. High in healthy monounsaturated fats, and minimal added brown sugar, this delivers a delectable crunch that is the perfect clean fuel for pre-workout carbs or bulk shake recipes.",
     servings: "39 Servings (1.25kg)",
     servingSize: "32g (2 Tbsp)",
@@ -137,6 +151,9 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/LDgMjPky/7.jpg",
       "https://i.ibb.co/32D5Ls3/6.jpg",
       "https://i.ibb.co/cSF14TTV/5.jpg"
+    ],
+    infoImages: [
+      "https://i.ibb.co/d0Mftd0k/Fish-Oil-Timeline-17-6-1.jpg"
     ],
     description: "Triple potency Omega-3 fatty acids. MuscleBlaze Fish Oil Gold provides 1250mg of molecularly distilled premium fish oil, supplying 540mg of EPA and 360mg of DHA. It supports cartilage hydration, joint fluid dynamics, brain function, and skin tone. Features advanced enteric coating to prevent digestive reflux and fishy aftertaste.",
     servings: "60 Capsules",
@@ -289,7 +306,7 @@ export const FAQS: FAQ[] = [
 ];
 
 export const NEPAL_REGIONS = [
-  { id: "ktm", name: "Kathmandu Valley (KTM, Lalitpur, Bhaktapur)", fee: 100, estimate: "1-2 Business Days" },
+  { id: "ktm", name: "Kathmandu Valley", fee: 100, estimate: "1-2 Business Days" },
   { id: "pokhara", name: "Pokhara / Lekhnath Hub", fee: 150, estimate: "2-3 Business Days" },
   { id: "chitwan", name: "Chitwan / Narayangarh Region", fee: 150, estimate: "2-3 Business Days" },
   { id: "tarai", name: "Major Tarai Cities (Biratnagar, Butwal, Birgunj)", fee: 200, estimate: "3-4 Business Days" },

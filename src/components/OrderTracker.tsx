@@ -18,6 +18,7 @@ interface Order {
   createdAt: string;
   shippingPartner: string;
   notes?: string;
+  screenshot?: string;
 }
 
 const PRESEEDED_ORDERS: Order[] = [
@@ -62,7 +63,7 @@ const PRESEEDED_ORDERS: Order[] = [
     status: "dispatched",
     createdAt: "June 19, 2026, 06:45 AM",
     shippingPartner: "Nepal Can Move (NCM)",
-    notes: "Securely boxed, bubble-wrapped, and dispatched from Lalitpur warehousing facility."
+    notes: "Securely boxed, bubble-wrapped, and dispatched from central warehousing facility."
   },
   {
     id: "FY-REM-1049",

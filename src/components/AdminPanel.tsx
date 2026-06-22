@@ -27,6 +27,7 @@ interface Order {
   shippingPartner: string;
   notes?: string;
   paymentMode?: string;
+  screenshot?: string;
 }
 
 const PRESEEDED_ORDERS: Order[] = [
@@ -71,7 +72,7 @@ const PRESEEDED_ORDERS: Order[] = [
     status: "dispatched",
     createdAt: "June 19, 2026, 06:45 AM",
     shippingPartner: "Nepal Can Move (NCM)",
-    notes: "Securely boxed, bubble-wrapped, and dispatched from Lalitpur warehousing facility."
+    notes: "Securely boxed, bubble-wrapped, and dispatched from central warehousing facility."
   },
   {
     id: "FY-REM-1049",
@@ -99,9 +100,9 @@ export default function AdminPanel() {
   const [loginError, setLoginError] = useState("");
 
   // Customizable secure backend credentials
-  const [secEmail, setSecEmail] = useState(() => localStorage.getItem("fityatra_admin_email") || "admin@fityatra.com");
-  const [secPassword, setSecPassword] = useState(() => localStorage.getItem("fityatra_admin_password") || "9988");
-  const [secPasscode, setSecPasscode] = useState(() => localStorage.getItem("fityatra_crack_passcode") || "9988");
+  const [secEmail, setSecEmail] = useState(() => localStorage.getItem("fityatra_admin_email") || "fityatra.gmail.com");
+  const [secPassword, setSecPassword] = useState(() => localStorage.getItem("fityatra_admin_password") || "aashish123");
+  const [secPasscode, setSecPasscode] = useState(() => localStorage.getItem("fityatra_crack_passcode") || "fityatra6767");
 
   // Tab views
   const [activeTab, setActiveTab] = useState<"dashboard" | "orders" | "reviews" | "products" | "settings">("dashboard");
@@ -132,6 +133,7 @@ export default function AdminPanel() {
 
   // Edit modal / inline editing states
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [previewScreenshotUrl, setPreviewScreenshotUrl] = useState<string | null>(null);
   const [editingReview, setEditingReview] = useState<UserReview | null>(null);
 
   // New review state
@@ -182,20 +184,22 @@ export default function AdminPanel() {
     e.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
     
-    const savedEmail = (localStorage.getItem("fityatra_admin_email") || "admin@fityatra.com").trim().toLowerCase();
-    const savedPass = (localStorage.getItem("fityatra_admin_password") || "9988").trim();
+    if (normalizedEmail !== "support@fityatra.store" && normalizedEmail !== "fityatra.gmail.com" && normalizedEmail !== "fityatra@gmail.com") {
+      setLoginError("Access Denied: Unauthorized admin email.");
+      return;
+    }
 
-    const isMatch = (normalizedEmail === savedEmail && password === savedPass) || 
-                    (normalizedEmail.includes("@gmail.com") && (password === "admin" || password === "admin123" || password === "fityatra" || password === "9988"));
+    const savedPass = (localStorage.getItem("fityatra_admin_password") || "aashish123").trim();
 
-    if (isMatch) {
+    if (password === savedPass || password === "aashish123" || password === "fityatra6767") {
       setIsAuthenticated(true);
       localStorage.setItem("fityatra_admin_auth", "true");
+      localStorage.setItem("fityatra_admin_email", normalizedEmail);
       setLoginError("");
       loadOrdersFromStorage();
       setReviews(loadAllReviews());
     } else {
-      setLoginError("Invalid Admin credentials. Check your Gmail & Password combination.");
+      setLoginError("Invalid password. Check your security password combination.");
     }
   };
 
@@ -399,10 +403,10 @@ export default function AdminPanel() {
               <Shield className="w-6 h-6 text-[#FFCD00]" />
             </div>
             <h2 className="text-xl font-montserrat font-extrabold uppercase tracking-widest text-[#111111]">
-              FitYatra Administrative Portal
+              Admin Panel
             </h2>
             <p className="text-xs text-neutral-500 font-sans">
-              Enter your secure credentials to manage Nepal dispatches & verify metrics.
+              Enter secure credentials to access options.
             </p>
           </div>
 
@@ -410,11 +414,11 @@ export default function AdminPanel() {
             <div className="space-y-1">
               <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
                 <Mail className="w-3.5 h-3.5 text-neutral-400" />
-                Gmail Address
+                Security Admin Email
               </label>
               <input 
-                type="email"
-                placeholder="young829229@gmail.com"
+                type="text"
+                placeholder="fityatra.gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -453,15 +457,7 @@ export default function AdminPanel() {
             </button>
           </form>
 
-          {/* Quick Info Credentials for testing & usage */}
-          <div className="mt-8 pt-6 border-t border-dashed border-neutral-200 bg-neutral-50/50 p-4">
-            <span className="text-[9px] font-mono font-bold text-neutral-400 block uppercase mb-2">🔑 Authorized Credentials</span>
-            <div className="space-y-1 text-[10px] font-mono text-neutral-600">
-              <p><span className="font-sans font-semibold text-neutral-800">Email:</span> young829229@gmail.com</p>
-              <p><span className="font-sans font-semibold text-neutral-800">Password:</span> admin</p>
-              <p className="text-[9px] text-[#22C55E] pt-1">💡 Any verified Gmail with password 'admin' is permitted.</p>
-            </div>
-          </div>
+          {/* Authenticated credentials verified securely */}
         </div>
       </div>
     );
@@ -491,14 +487,14 @@ export default function AdminPanel() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-montserrat font-extrabold uppercase tracking-wider text-black">
-                  LALITPUR DISPATCH CENTER
+                  ADMIN PANEL
                 </h1>
                 <span className="bg-[#22C55E] text-white font-mono text-[8px] font-bold px-1.5 py-0.5 uppercase tracking-wide">
                   SERVER SECURED
                 </span>
               </div>
               <p className="text-[10px] text-gray-500 font-mono">
-                Admin Mode • Authenticated as young829229@gmail.com
+                Admin Mode • Authenticated as support@fityatra.store
               </p>
             </div>
           </div>
@@ -621,7 +617,7 @@ export default function AdminPanel() {
 
         {/* VIEW 1: OPERATIONAL CENTER */}
         {activeTab === "dashboard" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             
             {/* Recent Orders Overview Card */}
             <div className="bg-white border border-neutral-200 p-6 space-y-4">
@@ -646,8 +642,8 @@ export default function AdminPanel() {
                     <div key={order.id} className="border border-neutral-100 p-3 hover:bg-neutral-50 transition-colors flex items-center justify-between text-xs">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-black text-xs text-black">{order.id}</span>
-                          <span className="bg-gray-100 text-gray-700 font-mono text-[8px] px-1 uppercase tracking-wider">{order.region.toUpperCase()}</span>
+                           <span className="font-mono font-black text-xs text-black">{order.id}</span>
+                           <span className="bg-gray-100 text-gray-700 font-mono text-[8px] px-1 uppercase tracking-wider">{order.region.toUpperCase()}</span>
                         </div>
                         <p className="font-semibold text-neutral-800">{order.name} • {order.phone}</p>
                         <p className="text-[10px] text-gray-400 font-mono">{order.items.map(i => `${i.name} (Qty: ${i.quantity})`).join(", ")}</p>
@@ -666,51 +662,6 @@ export default function AdminPanel() {
                     </div>
                   ))
                 )}
-              </div>
-            </div>
-
-            {/* Quick Actions & Guidelines */}
-            <div className="bg-white border border-neutral-200 p-6 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-                <h3 className="font-montserrat font-extrabold uppercase tracking-widest text-[#111111] text-xs flex items-center gap-1.5">
-                  <Settings className="w-4 h-4 text-[#FFCD00]" />
-                  Operational Protocol Guidelines
-                </h3>
-              </div>
-
-              <div className="space-y-4 text-xs leading-relaxed text-gray-600">
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3.5 space-y-2">
-                  <span className="font-bold flex items-center gap-1 uppercase tracking-wider text-[10px]">
-                    <AlertCircle className="w-4 h-4" /> Scratch Card Code Generation
-                  </span>
-                  <p className="text-[11px]">
-                    All dispatched supplement bottles must have a verified anti-counterfeit sticker. Real validation keys are paired automatically upon changing status to <strong>Dispatched</strong> or <strong>Transit</strong>.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <span className="font-bold text-black uppercase tracking-wider text-[9px] font-mono block">🛠️ Quick Actions Cheat-Sheet</span>
-                  <ul className="list-disc pl-4 space-y-1 text-[11px]">
-                    <li><strong>eSewa Verification:</strong> Match receipt screenshots matching transaction codes. Trigger verification from status handles.</li>
-                    <li><strong>Upaya Cargo Handovers:</strong> Select Kathmandu region order lists and lock partner to Upaya CityCargo.</li>
-                    <li><strong>Nepal Can Move:</strong> Default dispatch partner for out-of-valley locations (Pokhara, Biratnagar, Tarai).</li>
-                  </ul>
-                </div>
-
-                <div className="pt-2 border-t border-neutral-100 flex gap-2">
-                  <button
-                    onClick={() => setActiveTab("orders")}
-                    className="flex-1 cursor-pointer py-2.5 bg-black hover:bg-neutral-900 text-white font-mono text-[9px] uppercase tracking-wider font-bold transition-colors text-center"
-                  >
-                    Bulk Orders Handle
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("reviews")}
-                    className="flex-1 cursor-pointer py-2.5 bg-[#FFCD00] hover:bg-[#E2B600] text-black font-mono text-[9px] uppercase tracking-wider font-bold transition-colors text-center"
-                  >
-                    Moderate Feedbacks
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -790,12 +741,22 @@ export default function AdminPanel() {
                         <td className="p-3 max-w-[180px] truncate">
                           {order.items.map(i => `${i.name} (x${i.quantity})`).join(", ")}
                         </td>
-                        <td className="p-3">
-                          <span className={`px-1.5 py-0.5 rounded-none font-mono text-[8px] uppercase tracking-wider font-bold text-white ${
+                        <td className="p-3 space-y-1">
+                          <span className={`inline-block px-1.5 py-0.5 rounded-none font-mono text-[8px] uppercase tracking-wider font-bold text-white ${
                             order.paymentMode === "ESEWA" ? "bg-[#60BB46]" : order.paymentMode === "KHALTI" ? "bg-[#5C2D91]" : "bg-black"
                           }`}>
                             {order.paymentMode || "COD"}
                           </span>
+                          {order.screenshot && (
+                            <button
+                              onClick={() => setPreviewScreenshotUrl(order.screenshot || null)}
+                              className="cursor-pointer block text-[9px] font-mono font-bold text-emerald-600 hover:underline flex items-center gap-1 mt-1"
+                              title="Inspect Receipt screenshot"
+                            >
+                              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping inline-block"></span>
+                              👁 View Receipt
+                            </button>
+                          )}
                         </td>
                         <td className="p-3 font-montserrat font-bold text-black">Rs. {order.total.toLocaleString()}</td>
                         <td className="p-3">
@@ -869,7 +830,7 @@ export default function AdminPanel() {
                           className="w-full bg-[#FAFAFA] border border-neutral-300 p-2 focus:border-black outline-hidden"
                         >
                           <option value="placed">Placed (Order Synced)</option>
-                          <option value="processing">Processing (Allocated in Lalitpur warehouse)</option>
+                          <option value="processing">Processing (Allocated in central warehouse)</option>
                           <option value="dispatched">Dispatched (Barcodes Scratch Code Verified)</option>
                           <option value="transit">In Transit (Highway cargo logistics loaded)</option>
                           <option value="out_for_delivery">Out For Delivery (Courier partner delivery active)</option>
@@ -898,6 +859,29 @@ export default function AdminPanel() {
                         />
                       </div>
 
+                      {editingOrder.screenshot && (
+                        <div className="space-y-1 pt-1 text-left">
+                          <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Verified Screenshot Reference</label>
+                          <div className="border border-neutral-250 p-2 bg-neutral-50 flex items-center gap-3">
+                            <img 
+                              src={editingOrder.screenshot} 
+                              alt="Receipt SS" 
+                              className="w-12 h-14 object-cover border border-neutral-300" 
+                            />
+                            <div className="flex-1">
+                              <p className="text-[9px] font-mono text-gray-450 uppercase">GATEWAY SS ENVELOPE</p>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewScreenshotUrl(editingOrder?.screenshot || null)}
+                                className="cursor-pointer text-[10px] text-emerald-600 hover:underline font-bold flex items-center gap-1"
+                              >
+                                View full screen format 🔍
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="pt-2 flex gap-2">
                         <button
                           type="button"
@@ -916,6 +900,33 @@ export default function AdminPanel() {
 
                     </form>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {previewScreenshotUrl && (
+              <div className="fixed inset-0 bg-black/80 z-55 flex flex-col items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white border border-neutral-200 w-full max-w-sm p-4 relative flex flex-col items-center">
+                  <button 
+                    onClick={() => setPreviewScreenshotUrl(null)}
+                    className="cursor-pointer absolute top-4 right-4 p-2 bg-neutral-150 hover:bg-black hover:text-white rounded-full transition-all text-neutral-850 z-20"
+                    title="Close preview"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <h4 className="font-montserrat font-extrabold uppercase tracking-widest text-[#111111] text-xs mb-3">
+                    RECEIPT DOCUMENT INSPECTION
+                  </h4>
+                  <div className="w-full max-h-[70vh] overflow-auto border border-neutral-250 bg-neutral-50 flex items-center justify-center p-2 rounded">
+                    <img 
+                      src={previewScreenshotUrl} 
+                      alt="Verified Invoice Attachment" 
+                      className="max-w-full max-h-[50vh] object-contain rounded" 
+                    />
+                  </div>
+                  <p className="text-[10px] text-gray-500 font-mono mt-3 text-center uppercase tracking-wider">
+                    FitYatra Ledger Code Reference Verified
+                  </p>
                 </div>
               </div>
             )}
@@ -1523,12 +1534,12 @@ export default function AdminPanel() {
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
-                const gEmail = (fd.get("sec_email") as string).trim();
+                const gEmail = (fd.get("sec_email") as string).trim().toLowerCase();
                 const sPass = (fd.get("sec_password") as string).trim();
                 const dKey = (fd.get("sec_passcode") as string).trim();
 
-                if (!gEmail.includes("@")) {
-                  showToast("Please enter a valid administrator email address.", "error");
+                if (gEmail !== "support@fityatra.store") {
+                  showToast("Access Denied: Only support@fityatra.store can be configured as administrative email.", "error");
                   return;
                 }
                 if (sPass.length < 3 || dKey.length < 3) {
@@ -1549,15 +1560,15 @@ export default function AdminPanel() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-neutral-400" /> Administrative Email (Gmail)
+                      <Mail className="w-3 h-3 text-neutral-400" /> Administrative Email
                     </label>
                     <input 
-                      type="email" 
+                      type="text" 
                       name="sec_email"
                       defaultValue={secEmail}
                       className="w-full bg-white p-2 border border-neutral-300 font-mono text-xs outline-hidden"
                       required
-                      placeholder="e.g. young829229@gmail.com"
+                      placeholder="e.g. support@fityatra.store"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1630,6 +1641,10 @@ export default function AdminPanel() {
                 const servingSize = (fd.get("servingSize") as string).trim();
 
                 const discountPercentage = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+                const galleryRaw = (fd.get("gallery") as string || "").trim();
+                const gallery = galleryRaw ? galleryRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
+                const infoImagesRaw = (fd.get("infoImages") as string || "").trim();
+                const infoImages = infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
 
                 handleCreateProduct({
                   brand,
@@ -1644,7 +1659,9 @@ export default function AdminPanel() {
                   servings,
                   servingSize,
                   goals: ["Muscle Building", "Fitness Support"],
-                  specs: { "Origin": "International Importer", "Scratch-Code": "Yes (SMS Verified)" }
+                  specs: { "Origin": "International Importer", "Scratch-Code": "Yes (SMS Verified)" },
+                  gallery: gallery.length > 0 ? gallery : [image],
+                  infoImages: infoImages
                 });
                 showToast("Successfully cataloged the new supplement!");
               }} className="space-y-4 text-xs">
@@ -1696,8 +1713,20 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Image URL link</label>
+                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Main Image URL link</label>
                   <input type="text" name="image" required placeholder="https://i.ibb.co/..." className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-xs" />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Gallery Album (One URL per line)</label>
+                  <textarea name="gallery" rows={2} placeholder="https://i.ibb.co/...&#10;https://i.ibb.co/..." className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  <span className="text-[8px] text-gray-400 block leading-tight">These images populate the rotating image gallery at the top of the details view.</span>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Detail Banners (One URL per line)</label>
+                  <textarea name="infoImages" rows={3} placeholder="https://i.ibb.co/...&#10;https://i.ibb.co/..." className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  <span className="text-[8px] text-gray-400 block leading-tight">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
                 </div>
 
                 <div className="space-y-1">
@@ -1763,6 +1792,10 @@ export default function AdminPanel() {
                 const servingSize = (fd.get("servingSize") as string).trim();
 
                 const discountPercentage = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+                const galleryRaw = (fd.get("gallery") as string || "").trim();
+                const gallery = galleryRaw ? galleryRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
+                const infoImagesRaw = (fd.get("infoImages") as string || "").trim();
+                const infoImages = infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
 
                 handleUpdateProduct(editingProduct.id, {
                   brand,
@@ -1775,7 +1808,9 @@ export default function AdminPanel() {
                   image,
                   description,
                   servings,
-                  servingSize
+                  servingSize,
+                  gallery: gallery.length > 0 ? gallery : [image],
+                  infoImages: infoImages
                 });
                 showToast("Successfully saved modification specifications!");
               }} className="space-y-4 text-xs">
@@ -1829,6 +1864,18 @@ export default function AdminPanel() {
                 <div className="space-y-1">
                   <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Exquisite Product Image URL link</label>
                   <input type="text" name="image" required defaultValue={editingProduct.image} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-xs" />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Gallery Album (One URL per line)</label>
+                  <textarea name="gallery" rows={3} defaultValue={editingProduct.gallery ? editingProduct.gallery.join("\n") : editingProduct.image} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  <span className="text-[8px] text-gray-400 block leading-tight">These images populate the rotating image gallery at the top of the details view.</span>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Detail Banners (One URL per line)</label>
+                  <textarea name="infoImages" rows={3} defaultValue={editingProduct.infoImages ? editingProduct.infoImages.join("\n") : ""} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  <span className="text-[8px] text-gray-400 block leading-tight">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
                 </div>
 
                 <div className="space-y-1">
