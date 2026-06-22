@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { 
   Lock, Shield, Mail, Key, LayoutDashboard, ShoppingBag, MessageSquare, 
   Settings, CheckCircle, Clock, Truck, ShieldAlert, PieChart, Users, 
-  Trash2, Edit, RefreshCw, X, Check, Save, User, BarChart2, PlusCircle, AlertCircle, Search
+  Trash2, Edit, RefreshCw, X, Check, Save, User, BarChart2, PlusCircle, AlertCircle, Search,
+  Upload, Image as ImageIcon
 } from "lucide-react";
 import { loadAllReviews, saveAllReviews, UserReview, deleteProductReview, updateProductReview } from "../lib/reviews";
 import { PRODUCTS } from "../data";
@@ -116,6 +117,189 @@ export default function AdminPanel() {
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(() => loadPaymentSettings());
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
+  
+  // Friendly image file states for Add Supplement
+  const [addMainImage, setAddMainImage] = useState<string>("");
+  const [addGallery, setAddGallery] = useState<string[]>([]);
+  const [addInfoImages, setAddInfoImages] = useState<string[]>([]);
+
+  // Friendly image file states for Edit Supplement
+  const [editMainImage, setEditMainImage] = useState<string>("");
+  const [editGallery, setEditGallery] = useState<string[]>([]);
+  const [editInfoImages, setEditInfoImages] = useState<string[]>([]);
+
+  // Sync edits on load
+  useEffect(() => {
+    if (editingProduct) {
+      setEditMainImage(editingProduct.image || "");
+      setEditGallery(editingProduct.gallery || []);
+      setEditInfoImages(editingProduct.infoImages || []);
+    } else {
+      setEditMainImage("");
+      setEditGallery([]);
+      setEditInfoImages([]);
+    }
+  }, [editingProduct]);
+
+  // Sync adds on load
+  useEffect(() => {
+    if (showAddProductForm) {
+      setAddMainImage("");
+      setAddGallery([]);
+      setAddInfoImages([]);
+    }
+  }, [showAddProductForm]);
+
+  // Handle image conversion to Base64
+  const convertFilesToBase64 = (
+    files: FileList | null,
+    target: "addMain" | "addGallery" | "addInfo" | "editMain" | "editGallery" | "editInfo"
+  ) => {
+    if (!files || files.length === 0) return;
+    const items = Array.from(files);
+
+    const promises = items.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (err) => reject(err);
+      });
+    });
+
+    Promise.all(promises).then((res) => {
+      if (target === "addMain") {
+         setAddMainImage(res[0] || "");
+      } else if (target === "addGallery") {
+         setAddGallery(prev => [...prev, ...res]);
+      } else if (target === "addInfo") {
+         setAddInfoImages(prev => [...prev, ...res]);
+      } else if (target === "editMain") {
+         setEditMainImage(res[0] || "");
+      } else if (target === "editGallery") {
+         setEditGallery(prev => [...prev, ...res]);
+      } else if (target === "editInfo") {
+         setEditInfoImages(prev => [...prev, ...res]);
+      }
+    }).catch(err => console.error("Error loading images", err));
+  };
+
+  // Modern visual drag/drop and list image uploader helper
+  const renderImageUploader = (
+    label: string,
+    images: string | string[],
+    isMultiple: boolean,
+    onAdd: (base64s: string[]) => void,
+    onRemove: (index: number) => void,
+    targetId: string,
+    placeholderUrlName: string = "image"
+  ) => {
+    const isSingle = !isMultiple;
+    const imageList = isSingle 
+      ? (images ? [images as string] : []) 
+      : (images as string[]);
+
+    return (
+      <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200 space-y-2">
+        <div className="flex justify-between items-center">
+          <label className="text-[10px] uppercase font-mono font-bold text-neutral-700 block flex items-center gap-1.5">
+            <ImageIcon className="w-3.5 h-3.5 text-neutral-500" /> {label}
+          </label>
+          <span className="text-[9px] text-[#FFCD00] bg-black px-1.5 py-0.5 rounded-sm font-semibold">
+            {isMultiple ? "Multi-Photo" : "Single Photo"}
+          </span>
+        </div>
+
+        {/* Upload Trigger Area */}
+        <div className="relative group flex items-center justify-center border border-dashed border-neutral-300 rounded-md py-4 px-2 hover:bg-neutral-100 hover:border-neutral-500 transition-all cursor-pointer">
+          <input
+            id={targetId}
+            type="file"
+            accept="image/*"
+            multiple={isMultiple}
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                const arr = Array.from(e.target.files);
+                const promises = arr.map(file => {
+                  return new Promise<string>((resolve, reject) => {
+                    const r = new FileReader();
+                    r.readAsDataURL(file);
+                    r.onload = () => resolve(r.result as string);
+                    r.onerror = (err) => reject(err);
+                  });
+                });
+                Promise.all(promises).then((base64s) => {
+                  if (isMultiple) {
+                    onAdd([...imageList, ...base64s]);
+                  } else {
+                    onAdd(base64s);
+                  }
+                });
+              }
+            }}
+            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+          />
+          <div className="text-center space-y-1">
+            <Upload className="w-4 h-4 mx-auto text-neutral-400 group-hover:text-black transition-colors" />
+            <p className="text-[9px] font-medium text-neutral-500 group-hover:text-neutral-800">
+              {isMultiple ? "Choose / Drop gallery pictures here" : "Choose / Drop product image here"}
+            </p>
+          </div>
+        </div>
+
+        {/* Previews Grid */}
+        {imageList.length > 0 && (
+          <div className="grid grid-cols-4 gap-2 pt-1">
+            {imageList.map((img, idx) => {
+              if (!img) return null;
+              return (
+                <div key={idx} className="relative group aspect-square border border-neutral-200 rounded-md overflow-hidden bg-white shadow-xs">
+                  <img
+                    src={img}
+                    alt="Upload preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLElement).setAttribute("src", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=200");
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => onRemove(idx)}
+                      className="p-1 rounded-sm bg-red-500 hover:bg-red-600 text-white transition-colors"
+                      title="Remove image"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Link Input Fallback */}
+        <div className="pt-1">
+          <textarea
+            rows={isMultiple ? 2 : 1}
+            name={placeholderUrlName}
+            placeholder={isMultiple ? "Or paste links (one link per line) if preferred..." : "Or paste manual image web link..."}
+            value={isSingle ? (images as string) || "" : (images as string[]).join("\n")}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (isSingle) {
+                onAdd([val]);
+              } else {
+                const arr = val.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+                onAdd(arr);
+              }
+            }}
+            className="w-full text-[9px] font-mono p-1 bg-white border border-neutral-200 rounded-sm outline-hidden text-neutral-500 resize-y"
+          />
+        </div>
+      </div>
+    );
+  };
   
   // Clean and non-blocking toast notifications for sandboxed iframes
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -1635,16 +1819,16 @@ export default function AdminPanel() {
                 const price = Number(fd.get("price"));
                 const originalPrice = Number(fd.get("originalPrice"));
                 const isSoldOut = fd.get("isSoldOut") === "true";
-                const image = (fd.get("image") as string).trim();
+                const image = addMainImage || (fd.get("image") as string).trim();
                 const description = (fd.get("description") as string).trim();
                 const servings = (fd.get("servings") as string).trim();
                 const servingSize = (fd.get("servingSize") as string).trim();
 
                 const discountPercentage = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
                 const galleryRaw = (fd.get("gallery") as string || "").trim();
-                const gallery = galleryRaw ? galleryRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
+                const gallery = addGallery.length > 0 ? addGallery : (galleryRaw ? galleryRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : []);
                 const infoImagesRaw = (fd.get("infoImages") as string || "").trim();
-                const infoImages = infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
+                const infoImages = addInfoImages.length > 0 ? addInfoImages : (infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : []);
 
                 handleCreateProduct({
                   brand,
@@ -1712,20 +1896,39 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Main Image URL link</label>
-                  <input type="text" name="image" required placeholder="https://i.ibb.co/..." className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-xs" />
-                </div>
+                {renderImageUploader(
+                  "Main Supplement Image",
+                  addMainImage,
+                  false,
+                  (imgs) => setAddMainImage(imgs[0] || ""),
+                  () => setAddMainImage(""),
+                  "add-main-upload",
+                  "image"
+                )}
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Gallery Album (One URL per line)</label>
-                  <textarea name="gallery" rows={2} placeholder="https://i.ibb.co/...&#10;https://i.ibb.co/..." className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  {renderImageUploader(
+                    "Product Gallery Album",
+                    addGallery,
+                    true,
+                    (imgs) => setAddGallery(imgs),
+                    (idx) => setAddGallery((prev) => prev.filter((_, i) => i !== idx)),
+                    "add-gallery-upload",
+                    "gallery"
+                  )}
                   <span className="text-[8px] text-gray-400 block leading-tight">These images populate the rotating image gallery at the top of the details view.</span>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Detail Banners (One URL per line)</label>
-                  <textarea name="infoImages" rows={3} placeholder="https://i.ibb.co/...&#10;https://i.ibb.co/..." className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  {renderImageUploader(
+                    "Product Detail Banners",
+                    addInfoImages,
+                    true,
+                    (imgs) => setAddInfoImages(imgs),
+                    (idx) => setAddInfoImages((prev) => prev.filter((_, i) => i !== idx)),
+                    "add-info-upload",
+                    "infoImages"
+                  )}
                   <span className="text-[8px] text-gray-400 block leading-tight">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
                 </div>
 
@@ -1786,16 +1989,16 @@ export default function AdminPanel() {
                 const price = Number(fd.get("price"));
                 const originalPrice = Number(fd.get("originalPrice"));
                 const isSoldOut = fd.get("isSoldOut") === "true";
-                const image = (fd.get("image") as string).trim();
+                const image = editMainImage || (fd.get("image") as string).trim();
                 const description = (fd.get("description") as string).trim();
                 const servings = (fd.get("servings") as string).trim();
                 const servingSize = (fd.get("servingSize") as string).trim();
 
                 const discountPercentage = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
                 const galleryRaw = (fd.get("gallery") as string || "").trim();
-                const gallery = galleryRaw ? galleryRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
+                const gallery = editGallery.length > 0 ? editGallery : (galleryRaw ? galleryRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : []);
                 const infoImagesRaw = (fd.get("infoImages") as string || "").trim();
-                const infoImages = infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : [];
+                const infoImages = editInfoImages.length > 0 ? editInfoImages : (infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : []);
 
                 handleUpdateProduct(editingProduct.id, {
                   brand,
@@ -1861,20 +2064,39 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Exquisite Product Image URL link</label>
-                  <input type="text" name="image" required defaultValue={editingProduct.image} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-xs" />
-                </div>
+                {renderImageUploader(
+                  "Main Supplement Image",
+                  editMainImage,
+                  false,
+                  (imgs) => setEditMainImage(imgs[0] || ""),
+                  () => setEditMainImage(""),
+                  "edit-main-upload",
+                  "image"
+                )}
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Gallery Album (One URL per line)</label>
-                  <textarea name="gallery" rows={3} defaultValue={editingProduct.gallery ? editingProduct.gallery.join("\n") : editingProduct.image} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  {renderImageUploader(
+                    "Product Gallery Album",
+                    editGallery,
+                    true,
+                    (imgs) => setEditGallery(imgs),
+                    (idx) => setEditGallery((prev) => prev.filter((_, i) => i !== idx)),
+                    "edit-gallery-upload",
+                    "gallery"
+                  )}
                   <span className="text-[8px] text-gray-400 block leading-tight">These images populate the rotating image gallery at the top of the details view.</span>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-white bg-neutral-900 px-1.5 py-0.5 inline-block">Product Detail Banners (One URL per line)</label>
-                  <textarea name="infoImages" rows={3} defaultValue={editingProduct.infoImages ? editingProduct.infoImages.join("\n") : ""} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-mono text-[10px]" />
+                  {renderImageUploader(
+                    "Product Detail Banners",
+                    editInfoImages,
+                    true,
+                    (imgs) => setEditInfoImages(imgs),
+                    (idx) => setEditInfoImages((prev) => prev.filter((_, i) => i !== idx)),
+                    "edit-info-upload",
+                    "infoImages"
+                  )}
                   <span className="text-[8px] text-gray-400 block leading-tight">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
                 </div>
 
