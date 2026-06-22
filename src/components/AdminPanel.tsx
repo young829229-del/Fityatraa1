@@ -128,6 +128,18 @@ export default function AdminPanel() {
   const [editGallery, setEditGallery] = useState<string[]>([]);
   const [editInfoImages, setEditInfoImages] = useState<string[]>([]);
 
+  // Friendly image file states for payment settings QR codes
+  const [settingEsewaQr, setSettingEsewaQr] = useState<string>("");
+  const [settingKhaltiQr, setSettingKhaltiQr] = useState<string>("");
+
+  // Sync settings QR states when paymentSettings is loaded
+  useEffect(() => {
+    if (paymentSettings) {
+      setSettingEsewaQr(paymentSettings.esewaQrUrl || "");
+      setSettingKhaltiQr(paymentSettings.khaltiQrUrl || "");
+    }
+  }, [paymentSettings]);
+
   // Sync edits on load
   useEffect(() => {
     if (editingProduct) {
@@ -1530,12 +1542,12 @@ export default function AdminPanel() {
               };
 
               const isEsewa = getChecked("isEsewaEnabled");
-              const eqr = getVal("esewaQrUrl");
+              const eqr = settingEsewaQr || getVal("esewaQrUrl");
               const ename = getVal("esewaAccountName");
               const eno = getVal("esewaAccountNumber");
               
               const isKhalti = getChecked("isKhaltiEnabled");
-              const kqr = getVal("khaltiQrUrl");
+              const kqr = settingKhaltiQr || getVal("khaltiQrUrl");
               const kname = getVal("khaltiAccountName");
               const kno = getVal("khaltiAccountNumber");
 
@@ -1597,15 +1609,16 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">eSewa Scan & Pay QR Image URL</label>
-                  <input 
-                    type="text" 
-                    name="esewaQrUrl"
-                    defaultValue={paymentSettings.esewaQrUrl}
-                    className="w-full bg-white p-2 border border-neutral-300 font-mono text-xs outline-hidden"
-                    placeholder="https://..."
-                  />
-                  <span className="text-[8px] text-gray-400 block font-mono">Input a direct image URL (e.g. from ImgBB or other hosting services). Must start with http or https.</span>
+                  {renderImageUploader(
+                    "eSewa Scan & Pay QR Image",
+                    settingEsewaQr,
+                    false,
+                    (imgs) => setSettingEsewaQr(imgs[0] || ""),
+                    () => setSettingEsewaQr(""),
+                    "settings-esewa-upload",
+                    "esewaQrUrl"
+                  )}
+                  <span className="text-[8px] text-gray-400 block font-mono">Choose / Drop custom QR image, or paste a link. Must start with http or data:image.</span>
                 </div>
               </div>
 
@@ -1649,14 +1662,16 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Khalti Scan QR Image URL (Optional)</label>
-                  <input 
-                    type="text" 
-                    name="khaltiQrUrl"
-                    defaultValue={paymentSettings.khaltiQrUrl}
-                    className="w-full bg-white p-2 border border-neutral-300 font-mono text-xs outline-hidden"
-                    placeholder="https://..."
-                  />
+                  {renderImageUploader(
+                    "Khalti Scan QR Image (Optional)",
+                    settingKhaltiQr,
+                    false,
+                    (imgs) => setSettingKhaltiQr(imgs[0] || ""),
+                    () => setSettingKhaltiQr(""),
+                    "settings-khalti-upload",
+                    "khaltiQrUrl"
+                  )}
+                  <span className="text-[8px] text-gray-400 block font-mono">Choose / Drop custom QR image, or paste a link. Must start with http or data:image.</span>
                 </div>
               </div>
 
