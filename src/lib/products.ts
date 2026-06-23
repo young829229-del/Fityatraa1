@@ -22,6 +22,13 @@ export function saveAllProducts(products: Product[]) {
     localStorage.setItem(PRODUCTS_LOCAL_STORAGE_KEY, JSON.stringify(products));
     // Trigger custom event so other components know products changed
     window.dispatchEvent(new Event("fityatra_products_updated"));
+
+    // Async server synchronization
+    fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(products),
+    }).catch((err) => console.error("Failed to sync products to server", err));
   } catch (e) {
     console.error("Failed to save products dynamically", e);
   }

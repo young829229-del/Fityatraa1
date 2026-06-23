@@ -531,6 +531,7 @@ Sent via FitYatra Applet Dispatcher`;
                               src={paymentSettings.esewaQrUrl} 
                               alt="eSewa Payment QR" 
                               className="w-full h-auto object-contain border-0"
+                              referrerPolicy="no-referrer"
                             />
                             <span className="text-[8px] font-mono text-neutral-400 mt-1 uppercase tracking-wider text-center block">SCAN TO PAY</span>
                           </div>
@@ -559,6 +560,7 @@ Sent via FitYatra Applet Dispatcher`;
                               src={paymentSettings.khaltiQrUrl} 
                               alt="Khalti Payment QR" 
                               className="w-full h-auto object-contain border-0"
+                              referrerPolicy="no-referrer"
                             />
                             <span className="text-[8px] font-mono text-neutral-400 mt-1 uppercase tracking-wider text-center block">SCAN TO PAY</span>
                           </div>

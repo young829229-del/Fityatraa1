@@ -37,6 +37,7 @@ export default function Navbar({
               src="https://i.ibb.co/wNJpkjyN/IMG-20260617-WA0012.jpg" 
               alt="FitYatra Logo" 
               className="w-10 h-10 rounded-full object-cover border border-neutral-200 shadow-sm" 
+              referrerPolicy="no-referrer"
             />
             <span className="hidden sm:inline font-mono font-black text-xs uppercase tracking-widest text-black">
               FitYatra

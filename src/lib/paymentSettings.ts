@@ -11,7 +11,7 @@ export interface PaymentSettings {
   isCodEnabled: boolean;
 }
 
-const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
+export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   esewaQrUrl: "https://i.ibb.co/rKx0ZpM3/IMG-20260617-WA0012.jpg",
   esewaAccountName: "FitYatra Supplements",
   esewaAccountNumber: "98510****2",
@@ -47,6 +47,13 @@ export function savePaymentSettings(settings: PaymentSettings) {
   try {
     localStorage.setItem(PAYMENT_SETTINGS_KEY, JSON.stringify(settings));
     window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
+
+    // Sync setting asynchronously to the fullstack server
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    }).catch((err) => console.error("Failed to sync payment settings to server", err));
   } catch (e) {
     console.error("Failed to save payment settings", e);
   }

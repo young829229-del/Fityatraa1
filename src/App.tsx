@@ -27,6 +27,45 @@ export default function App() {
     return () => window.removeEventListener("fityatra_products_updated", handleProductsChange);
   }, []);
 
+  useEffect(() => {
+    const synchronizeWithServer = async () => {
+      try {
+        const settingsRes = await fetch("/api/settings");
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          localStorage.setItem("fityatra_payment_settings", JSON.stringify(settingsData));
+          window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
+        }
+      } catch (err) {
+        console.warn("Could not sync settings from server on boot", err);
+      }
+
+      try {
+        const productsRes = await fetch("/api/products");
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          localStorage.setItem("fityatra_dynamic_products", JSON.stringify(productsData));
+          window.dispatchEvent(new Event("fityatra_products_updated"));
+        }
+      } catch (err) {
+        console.warn("Could not sync products from server on boot", err);
+      }
+
+      try {
+        const reviewsRes = await fetch("/api/reviews");
+        if (reviewsRes.ok) {
+          const reviewsData = await reviewsRes.json();
+          localStorage.setItem("fityatra_product_reviews", JSON.stringify(reviewsData));
+          window.dispatchEvent(new Event("fityatra_reviews_updated"));
+        }
+      } catch (err) {
+        console.warn("Could not sync reviews from server on boot", err);
+      }
+    };
+
+    synchronizeWithServer();
+  }, []);
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const persisted = localStorage.getItem("fityatra_active_cart");
@@ -361,6 +400,7 @@ export default function App() {
                   src="https://i.ibb.co/DFnZ5Fy/Phone-Version-4-1-1-1.jpg"
                   alt="FitYatra Background"
                   className="w-full h-full object-cover object-top filter brightness-[0.85] contrast-[1.05]"
+                  referrerPolicy="no-referrer"
                 />
                 {/* Soft sophisticated dark fade at bottom and top to blend nicely */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70 pointer-events-none" />
@@ -425,11 +465,13 @@ export default function App() {
                   src="https://i.ibb.co/VY559qC6/Fit-Yatra-2.png"
                   alt="Fit Yatra Assurances"
                   className="w-full h-auto object-contain max-w-5xl"
+                  referrerPolicy="no-referrer"
                 />
                 <img
                   src="https://i.ibb.co/KcBDpGYD/MV2-1-1-1.jpg"
                   alt="Additional Promo"
                   className="w-full h-auto object-contain max-w-5xl"
+                  referrerPolicy="no-referrer"
                 />
               </div>
             </section>

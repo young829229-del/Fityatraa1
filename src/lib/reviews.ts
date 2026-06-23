@@ -14,7 +14,7 @@ export interface UserReview {
 }
 
 // Initial high quality realistic reviews to seed the application
-const INITIAL_REVIEWS: UserReview[] = [
+export const INITIAL_REVIEWS: UserReview[] = [
   {
     id: "rev-wc-1",
     productId: "wellcore-creatine",
@@ -136,6 +136,14 @@ export function loadAllReviews(): UserReview[] {
 export function saveAllReviews(reviews: UserReview[]) {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(reviews));
+    window.dispatchEvent(new Event("fityatra_reviews_updated"));
+
+    // Async server synchronization
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reviews),
+    }).catch((err) => console.error("Failed to sync reviews to server", err));
   } catch (e) {
     console.error("Failed to save reviews", e);
   }
