@@ -140,6 +140,14 @@ export default function AdminPanel() {
     }
   }, [paymentSettings]);
 
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      setPaymentSettings(loadPaymentSettings());
+    };
+    window.addEventListener("fityatra_payment_settings_updated", handleSettingsUpdate);
+    return () => window.removeEventListener("fityatra_payment_settings_updated", handleSettingsUpdate);
+  }, []);
+
   // Sync edits on load
   useEffect(() => {
     if (editingProduct) {

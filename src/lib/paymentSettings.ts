@@ -12,7 +12,7 @@ export interface PaymentSettings {
 }
 
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
-  esewaQrUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDs9czAAAABlBMVEUAAAD///+l2Z/dAAAAAnRSTlMAAHaTzTgAAAGRSURBVGjNY2AYBaNgFAwfMGfO9A+KHzNm/gWpP5gYGRgqgGofRkwbY+pDGAqOglEwCoZfGHB6P/bIpxcMvzAgnSgYBoNRE8BYqOAwFp/DWCQORgExDqNgmIZRMPzCwD8Nf29fGBgY/v+/AOMwFIpGAb7A6AnYFwZgVn7mF76gY6HCwxgpDkYBMZ6gYJiGUTD8woDPqGf7p86uGv6TMyXFMCBGIEY6i4JRMAqGVRiwnB77p9avGTUeCwwMDL8e9B8FRgG+8MDB0SgYBaNgWIXBnzfXFpY3GP49fP39uFswFEpGAb5wwcHRKBgFo2BYhUGM05kYf70G0vj9Z8M0CExiMArwhQdHowKjYBgCo2D4hYGAOfP9Z8f/f94A6gP/X38/PhYKhZJRAMFpdHAUjIJRMAzCwPvLz5f9Z8bX6v9//gKqD4wCfAGDo1EwCkbBsAqDoBqnv++fXgNpfA8OgsWkFAajAF944OBoFIyCUTD8wuD/4ffr/jPjB3mU7+HRKMD3YgODKxgZGAAMV+kQ6BfV6QAAAABJRU5ErkJoggling==",
+  esewaQrUrl: "https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=9744493393",
   esewaAccountName: "Aashish Bohara",
   esewaAccountNumber: "9744493393",
   khaltiQrUrl: "",
