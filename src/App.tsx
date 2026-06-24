@@ -116,11 +116,22 @@ export default function App() {
   const [crackAnswer, setCrackAnswer] = useState<string>("");
   const [crackError, setCrackError] = useState<string | null>(null);
   const [isCrackingSuccessfully, setIsCrackingSuccessfully] = useState<boolean>(false);
-  const [isCracked, setIsCracked] = useState<boolean>(false);
+  const [isCracked, setIsCracked] = useState<boolean>(() => {
+    return localStorage.getItem("fityatra_admin_auth") === "true";
+  });
 
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
-  const [adminEmail, setAdminEmail] = useState<string>("");
-  const [adminPassword, setAdminPassword] = useState<string>("");
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem("fityatra_admin_auth") === "true";
+  });
+  const [adminEmail, setAdminEmail] = useState<string>(() => {
+    return localStorage.getItem("fityatra_admin_saved_email") || "";
+  });
+  const [adminPassword, setAdminPassword] = useState<string>(() => {
+    return localStorage.getItem("fityatra_admin_saved_password") || "";
+  });
+  const [rememberMe, setRememberMe] = useState<boolean>(() => {
+    return localStorage.getItem("fityatra_remember_me") !== "false";
+  });
   const [loginError, setLoginError] = useState<string | null>(null);
   
   // Active policy type modal state
@@ -140,6 +151,32 @@ export default function App() {
       setSuccessToast(null);
     }, 3000);
   };
+
+  // Synchronize URL routing for separate link /admin
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      if (path === "/admin" || path.startsWith("/admin/") || hash === "#admin") {
+        setActiveTab("admin");
+        setIsCracked(true);
+      } else {
+        // If we are currently on "admin" but pathname is NOT /admin, switch back to home
+        setActiveTab((prev) => (prev === "admin" ? "home" : prev));
+      }
+    };
+
+    // Run once on mount
+    handleLocationChange();
+
+    window.addEventListener("popstate", handleLocationChange);
+    window.addEventListener("hashchange", handleLocationChange);
+
+    return () => {
+      window.removeEventListener("popstate", handleLocationChange);
+      window.removeEventListener("hashchange", handleLocationChange);
+    };
+  }, []);
 
   // Wishlist Action Handlers
   const handleToggleWishlist = (product: Product) => {
@@ -209,6 +246,19 @@ export default function App() {
   // Custom Navigation scrolling layout helper
   const handleSectionNavigation = (section: string) => {
     setActiveTab(section);
+    
+    // Update the browser URL dynamically
+    if (section === "admin") {
+      setIsCracked(true);
+      if (window.location.pathname !== "/admin") {
+        window.history.pushState(null, "", "/admin");
+      }
+    } else {
+      if (window.location.pathname !== "/") {
+        window.history.pushState(null, "", "/");
+      }
+    }
+
     if (section === "home") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (section === "shop") {
@@ -280,6 +330,10 @@ export default function App() {
                     setIsAdminAuthenticated(false);
                     setIsCracked(false);
                     setActiveTab("home");
+                    localStorage.removeItem("fityatra_admin_auth");
+                    // Pre-fill the login form fields back to saved credentials, if any
+                    setAdminEmail(localStorage.getItem("fityatra_admin_saved_email") || "");
+                    setAdminPassword(localStorage.getItem("fityatra_admin_saved_password") || "");
                     triggerToast("Admin control console successfully locked!");
                   }}
                   className="bg-black hover:bg-neutral-900 text-white font-mono uppercase font-bold text-[9px] px-3 py-1 tracking-wider cursor-pointer border border-neutral-800 transition-colors"
@@ -322,10 +376,22 @@ export default function App() {
                     if (trimmedPass === savedPass || trimmedPass === "aashish123" || trimmedPass === "fityatra6767") {
                       setIsAdminAuthenticated(true);
                       setLoginError(null);
-                      setAdminEmail("");
-                      setAdminPassword("");
+                      
                       localStorage.setItem("fityatra_admin_auth", "true");
                       localStorage.setItem("fityatra_admin_email", trimmedEmail);
+
+                      if (rememberMe) {
+                        localStorage.setItem("fityatra_admin_saved_email", trimmedEmail);
+                        localStorage.setItem("fityatra_admin_saved_password", trimmedPass);
+                        localStorage.setItem("fityatra_remember_me", "true");
+                      } else {
+                        localStorage.removeItem("fityatra_admin_saved_email");
+                        localStorage.removeItem("fityatra_admin_saved_password");
+                        localStorage.setItem("fityatra_remember_me", "false");
+                      }
+
+                      setAdminEmail("");
+                      setAdminPassword("");
                       triggerToast("ACCESS AUTHORIZED. Welcome back, administrator.");
                     } else {
                       setLoginError("INVALID ACCOUNT MATCH. TERMINAL REJECTED.");
@@ -356,6 +422,20 @@ export default function App() {
                       className="w-full text-center bg-black border border-zinc-700 py-3 px-4 font-mono text-xs text-white placeholder-zinc-650 outline-none focus:border-amber-400 transition-colors"
                       required
                     />
+                  </div>
+
+                  <div className="flex items-center justify-center pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-3.5 h-3.5 accent-amber-500 bg-black border border-zinc-700 rounded-none focus:ring-0 cursor-pointer"
+                      />
+                      <span className="font-mono text-[9px] text-zinc-400 uppercase tracking-wider">
+                        Remember Me
+                      </span>
+                    </label>
                   </div>
 
                   {loginError && (
@@ -644,11 +724,18 @@ export default function App() {
                 © 2026, FitYatra Nepal. Proudly Powered by Shrine. Direct import{" "}
                 <span 
                   onClick={() => {
-                    // Boot secret decrypt sequence
-                    setShowCrackModal(true);
-                    setCrackError(null);
-                    setCrackAnswer("");
-                    setIsCrackingSuccessfully(false);
+                    if (localStorage.getItem("fityatra_admin_auth") === "true") {
+                      setIsCracked(true);
+                      setIsAdminAuthenticated(true);
+                      setActiveTab("admin");
+                      triggerToast("Welcome back, administrator.");
+                    } else {
+                      // Boot secret decrypt sequence
+                      setShowCrackModal(true);
+                      setCrackError(null);
+                      setCrackAnswer("");
+                      setIsCrackingSuccessfully(false);
+                    }
                   }}
                   className="cursor-default hover:text-zinc-450 tracking-normal transition-colors active:text-amber-500 font-medium"
                 >
