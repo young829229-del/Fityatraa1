@@ -220,18 +220,18 @@ export default function AdminPanel() {
       : (images as string[]);
 
     return (
-      <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-200 space-y-2">
+      <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 space-y-3">
         <div className="flex justify-between items-center">
-          <label className="text-[10px] uppercase font-mono font-bold text-neutral-700 block flex items-center gap-1.5">
-            <ImageIcon className="w-3.5 h-3.5 text-neutral-500" /> {label}
+          <label className="text-[10px] sm:text-xs uppercase font-mono font-bold text-neutral-700 block flex items-center gap-1.5">
+            <ImageIcon className="w-4 h-4 text-[#FFCD00]" /> {label}
           </label>
-          <span className="text-[9px] text-[#FFCD00] bg-black px-1.5 py-0.5 rounded-sm font-semibold">
+          <span className="text-[9px] text-[#FFCD00] bg-black px-2 py-0.5 rounded-sm font-semibold uppercase tracking-wider font-mono">
             {isMultiple ? "Multi-Photo" : "Single Photo"}
           </span>
         </div>
 
-        {/* Upload Trigger Area */}
-        <div className="relative group flex items-center justify-center border border-dashed border-neutral-300 rounded-md py-4 px-2 hover:bg-neutral-100 hover:border-neutral-500 transition-all cursor-pointer">
+        {/* Upload Trigger Area - Tall and Spacious */}
+        <div className="relative group flex flex-col items-center justify-center border-2 border-dashed border-neutral-300 rounded-xl py-8 px-4 hover:bg-amber-50/10 hover:border-[#FFCD00] transition-all duration-200 cursor-pointer bg-white">
           <input
             id={targetId}
             type="file"
@@ -259,37 +259,40 @@ export default function AdminPanel() {
             }}
             className="absolute inset-0 opacity-0 cursor-pointer z-10"
           />
-          <div className="text-center space-y-1">
-            <Upload className="w-4 h-4 mx-auto text-neutral-400 group-hover:text-black transition-colors" />
-            <p className="text-[9px] font-medium text-neutral-500 group-hover:text-neutral-800">
-              {isMultiple ? "Choose / Drop gallery pictures here" : "Choose / Drop product image here"}
+          <div className="text-center space-y-2">
+            <Upload className="w-8 h-8 mx-auto text-neutral-400 group-hover:text-[#FFCD00] group-hover:scale-110 transition-all duration-200" />
+            <p className="text-xs font-bold text-neutral-700 group-hover:text-black font-sans">
+              {isMultiple ? "Drag & Drop gallery pictures here" : "Drag & Drop main product picture here"}
+            </p>
+            <p className="text-[10px] text-neutral-400 font-sans">
+              or <span className="text-[#FFCD00] font-bold group-hover:underline">browse files</span> on your computer
             </p>
           </div>
         </div>
 
-        {/* Previews Grid */}
+        {/* Previews Grid - Responsive and containing images completely */}
         {imageList.length > 0 && (
-          <div className="grid grid-cols-4 gap-2 pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
             {imageList.map((img, idx) => {
               if (!img) return null;
               return (
-                <div key={idx} className="relative group aspect-square border border-neutral-200 rounded-md overflow-hidden bg-white shadow-xs">
+                <div key={idx} className="relative group aspect-square border border-neutral-200 rounded-xl overflow-hidden bg-white shadow-xs flex items-center justify-center p-2">
                   <img
                     src={img}
                     alt="Upload preview"
-                    className="w-full h-full object-cover"
+                    className="max-w-full max-h-full object-contain"
                     onError={(e) => {
                       (e.target as HTMLElement).setAttribute("src", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=200");
                     }}
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center">
                     <button
                       type="button"
                       onClick={() => onRemove(idx)}
-                      className="p-1 rounded-sm bg-red-500 hover:bg-red-600 text-white transition-colors"
+                      className="p-2 rounded-full bg-red-600 hover:bg-red-700 text-white transition-colors shadow-lg cursor-pointer"
                       title="Remove image"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -314,7 +317,7 @@ export default function AdminPanel() {
                 onAdd(arr);
               }
             }}
-            className="w-full text-[9px] font-mono p-1 bg-white border border-neutral-200 rounded-sm outline-hidden text-neutral-500 resize-y"
+            className="w-full text-[10px] font-mono p-2 bg-white border border-neutral-200 rounded-md outline-hidden text-neutral-600 focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] transition-colors resize-y"
           />
         </div>
       </div>
@@ -1820,18 +1823,20 @@ export default function AdminPanel() {
 
         {/* ================= REGISTER SUPPLEMENT MODAL (ADD) ================= */}
         {showAddProductForm && (
-          <div className="fixed inset-0 bg-black/60 z-55 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white border border-neutral-350 w-full max-w-lg p-6 relative my-8">
-              <button 
-                onClick={() => setShowAddProductForm(false)}
-                className="absolute top-4 right-4 p-1 text-gray-400 hover:text-black hover:bg-neutral-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <h4 className="font-montserrat font-extrabold uppercase tracking-widest text-[#111111] text-xs pb-3 border-b border-neutral-200 mb-4">
-                ➕ ADD NEW SUPPLEMENT PRODUCT TO STOREFRONT
-              </h4>
+          <div className="fixed inset-0 bg-black/60 z-55 flex items-stretch sm:items-start justify-center p-0 sm:p-4 overflow-y-auto">
+            <div className="bg-white border-0 sm:border border-neutral-350 w-full max-w-2xl sm:my-8 rounded-none sm:rounded-xl shadow-2xl relative flex flex-col h-full sm:h-auto sm:max-h-[92vh] max-h-screen">
+              
+              <div className="p-5 border-b border-neutral-200 flex justify-between items-center bg-neutral-50 rounded-t-xl shrink-0">
+                <h4 className="font-montserrat font-extrabold uppercase tracking-widest text-[#111111] text-xs">
+                  ➕ ADD NEW SUPPLEMENT PRODUCT TO STOREFRONT
+                </h4>
+                <button 
+                  onClick={() => setShowAddProductForm(false)}
+                  className="p-1.5 text-gray-400 hover:text-black hover:bg-neutral-200 rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
               <form onSubmit={(e) => {
                 e.preventDefault();
@@ -1853,6 +1858,17 @@ export default function AdminPanel() {
                 const infoImagesRaw = (fd.get("infoImages") as string || "").trim();
                 const infoImages = addInfoImages.length > 0 ? addInfoImages : (infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : []);
 
+                const variantsRaw = (fd.get("variantsJson") as string || "").trim();
+                let variants = undefined;
+                if (variantsRaw) {
+                  try {
+                    variants = JSON.parse(variantsRaw);
+                  } catch (err) {
+                    showToast("Error parsing Product Variants JSON. Creating product with default options.");
+                    console.error("Failed to parse variants JSON", err);
+                  }
+                }
+
                 handleCreateProduct({
                   brand,
                   name,
@@ -1868,117 +1884,146 @@ export default function AdminPanel() {
                   goals: ["Muscle Building", "Fitness Support"],
                   specs: { "Origin": "International Importer", "Scratch-Code": "Yes (SMS Verified)" },
                   gallery: gallery.length > 0 ? gallery : [image],
-                  infoImages: infoImages
+                  infoImages: infoImages,
+                  variants
                 });
                 showToast("Successfully cataloged the new supplement!");
-              }} className="space-y-4 text-xs">
+              }} className="flex flex-col min-h-0 flex-1">
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Brand (e.g. Wellcore)</label>
-                    <input type="text" name="brand" required placeholder="Wellcore" className="w-full bg-neutral-50 p-2 border border-neutral-300" />
+                <div className="p-6 overflow-y-auto space-y-5 text-xs flex-1">
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Brand (e.g. Wellcore)</label>
+                      <input type="text" name="brand" required placeholder="Wellcore" className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Product Category</label>
+                      <select name="category" required className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors">
+                        <option value="Creatine">Creatine</option>
+                        <option value="Protein">Protein</option>
+                        <option value="Peanut Butter">Peanut Butter</option>
+                        <option value="Collagen">Collagen</option>
+                        <option value="L-Carnitine">L-Carnitine</option>
+                        <option value="Pre-Workout">Pre-Workout</option>
+                        <option value="Essentials">Essentials</option>
+                      </select>
+                    </div>
                   </div>
+
                   <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Product Category</label>
-                    <select name="category" required className="w-full bg-neutral-50 p-2 border border-neutral-300">
-                      <option value="Creatine">Creatine</option>
-                      <option value="Protein">Protein</option>
-                      <option value="Peanut Butter">Peanut Butter</option>
-                      <option value="Collagen">Collagen</option>
-                      <option value="L-Carnitine">L-Carnitine</option>
-                      <option value="Pre-Workout">Pre-Workout</option>
-                      <option value="Essentials">Essentials</option>
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Supplement Title Name</label>
+                    <input type="text" name="name" required placeholder="Micronised Creatine Monohydrate Pure" className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">FitYatra Price (Rs.)</label>
+                      <input type="number" name="price" required min="1" placeholder="2199" className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-bold" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Original Price (Rs.)</label>
+                      <input type="number" name="originalPrice" required min="1" placeholder="2700" className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Total Servings</label>
+                      <input type="text" name="servings" placeholder="33 Servings" className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Serving Size</label>
+                      <input type="text" name="servingSize" placeholder="3g scoop" className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    {renderImageUploader(
+                      "Main Supplement Image",
+                      addMainImage,
+                      false,
+                      (imgs) => setAddMainImage(imgs[0] || ""),
+                      () => setAddMainImage(""),
+                      "add-main-upload",
+                      "image"
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    {renderImageUploader(
+                      "Product Gallery Album",
+                      addGallery,
+                      true,
+                      (imgs) => setAddGallery(imgs),
+                      (idx) => setAddGallery((prev) => prev.filter((_, i) => i !== idx)),
+                      "add-gallery-upload",
+                      "gallery"
+                    )}
+                    <span className="text-[9px] text-gray-400 block leading-tight mt-1">These images populate the rotating image gallery at the top of the details view.</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    {renderImageUploader(
+                      "Product Detail Banners",
+                      addInfoImages,
+                      true,
+                      (imgs) => setAddInfoImages(imgs),
+                      (idx) => setAddInfoImages((prev) => prev.filter((_, i) => i !== idx)),
+                      "add-info-upload",
+                      "infoImages"
+                    )}
+                    <span className="text-[9px] text-gray-400 block leading-tight mt-1">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Inventory Status</label>
+                    <select name="isSoldOut" className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-bold">
+                      <option value="false">Active (In Stock)</option>
+                      <option value="true">Sold Out (Disable Adding to Cart)</option>
                     </select>
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Supplement Title Name</label>
-                  <input type="text" name="name" required placeholder="Micronised Creatine Monohydrate Pure" className="w-full bg-neutral-50 p-2 border border-neutral-300" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">FitYatra Price (Rs.)</label>
-                    <input type="number" name="price" required min="1" placeholder="2199" className="w-full bg-neutral-50 p-2 border border-neutral-300" />
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Product Variants & Quantity Pricing (JSON, Optional)</label>
+                    <textarea name="variantsJson" rows={4} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" placeholder={`[
+  {
+    "name": "1 Pack (Standard)",
+    "price": 2199,
+    "originalPrice": 3199,
+    "servings": "100 Servings",
+    "servingSize": "3g",
+    "isSoldOut": false
+  },
+  {
+    "name": "2 Pack (Save Extra 10%)",
+    "price": 3958,
+    "originalPrice": 6398,
+    "servings": "200 Servings",
+    "servingSize": "3g",
+    "isSoldOut": false
+  }
+]`} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-mono text-base sm:text-[10px]" />
+                    <span className="text-[9px] text-gray-400 block leading-tight mt-1">Define custom multi-pack discount tiers or size variations with separate pricing. Leave empty to auto-generate default 1, 2, and 3-pack discounts for all products automatically!</span>
                   </div>
+
                   <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Original Price (Rs.)</label>
-                    <input type="number" name="originalPrice" required min="1" placeholder="2700" className="w-full bg-neutral-50 p-2 border border-neutral-300" />
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Supplement Description</label>
+                    <textarea name="description" rows={3} required placeholder="Write highlights, benefits, authentic scratch codes info..." className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-sans" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Total Servings</label>
-                    <input type="text" name="servings" placeholder="33 Servings" className="w-full bg-neutral-50 p-2 border border-neutral-300" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Serving Size</label>
-                    <input type="text" name="servingSize" placeholder="3g scoop" className="w-full bg-neutral-50 p-2 border border-neutral-300" />
-                  </div>
-                </div>
-
-                {renderImageUploader(
-                  "Main Supplement Image",
-                  addMainImage,
-                  false,
-                  (imgs) => setAddMainImage(imgs[0] || ""),
-                  () => setAddMainImage(""),
-                  "add-main-upload",
-                  "image"
-                )}
-
-                <div className="space-y-1">
-                  {renderImageUploader(
-                    "Product Gallery Album",
-                    addGallery,
-                    true,
-                    (imgs) => setAddGallery(imgs),
-                    (idx) => setAddGallery((prev) => prev.filter((_, i) => i !== idx)),
-                    "add-gallery-upload",
-                    "gallery"
-                  )}
-                  <span className="text-[8px] text-gray-400 block leading-tight">These images populate the rotating image gallery at the top of the details view.</span>
-                </div>
-
-                <div className="space-y-1">
-                  {renderImageUploader(
-                    "Product Detail Banners",
-                    addInfoImages,
-                    true,
-                    (imgs) => setAddInfoImages(imgs),
-                    (idx) => setAddInfoImages((prev) => prev.filter((_, i) => i !== idx)),
-                    "add-info-upload",
-                    "infoImages"
-                  )}
-                  <span className="text-[8px] text-gray-400 block leading-tight">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Inventory Status</label>
-                  <select name="isSoldOut" className="w-full bg-neutral-50 p-2 border border-neutral-300 font-bold">
-                    <option value="false">Active (In Stock)</option>
-                    <option value="true">Sold Out (Disable Adding to Cart)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Supplement Description</label>
-                  <textarea name="description" rows={3} required placeholder="Write highlights, benefits, authentic scratch codes info..." className="w-full bg-neutral-50 p-2 border border-neutral-300 font-sans" />
-                </div>
-
-                <div className="pt-2 flex gap-2">
+                <div className="p-5 border-t border-neutral-200 bg-neutral-50 rounded-b-xl flex gap-3 shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowAddProductForm(false)}
-                    className="flex-1 py-2.5 border border-neutral-300 hover:bg-neutral-50 text-neutral-800 uppercase font-mono text-[10px] font-bold"
+                    className="flex-1 py-3 border border-neutral-300 hover:bg-neutral-100 text-neutral-800 uppercase font-mono text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 bg-black hover:bg-neutral-900 text-white uppercase font-mono text-[10px] font-bold"
+                    className="flex-1 py-3 bg-black hover:bg-neutral-900 text-white uppercase font-mono text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
                   >
                     Publish Supplement
                   </button>
@@ -1990,18 +2035,20 @@ export default function AdminPanel() {
 
         {/* ================= EDIT SUPPLEMENT DETAILS MODAL ================= */}
         {editingProduct && (
-          <div className="fixed inset-0 bg-black/60 z-55 flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white border border-neutral-350 w-full max-w-lg p-6 relative my-8">
-              <button 
-                onClick={() => setEditingProduct(null)}
-                className="absolute top-4 right-4 p-1 text-gray-400 hover:text-black hover:bg-neutral-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <h4 className="font-montserrat font-extrabold uppercase tracking-widest text-[#111111] text-xs pb-3 border-b border-neutral-200 mb-4">
-                ✏️ EDIT SUPPLEMENT: {editingProduct.brand} {editingProduct.name}
-              </h4>
+          <div className="fixed inset-0 bg-black/60 z-55 flex items-stretch sm:items-start justify-center p-0 sm:p-4 overflow-y-auto">
+            <div className="bg-white border-0 sm:border border-neutral-350 w-full max-w-2xl sm:my-8 rounded-none sm:rounded-xl shadow-2xl relative flex flex-col h-full sm:h-auto sm:max-h-[92vh] max-h-screen">
+              
+              <div className="p-5 border-b border-neutral-200 flex justify-between items-center bg-neutral-50 rounded-t-xl shrink-0">
+                <h4 className="font-montserrat font-extrabold uppercase tracking-widest text-[#111111] text-xs">
+                  ✏️ EDIT SUPPLEMENT: {editingProduct.brand} {editingProduct.name}
+                </h4>
+                <button 
+                  onClick={() => setEditingProduct(null)}
+                  className="p-1.5 text-gray-400 hover:text-black hover:bg-neutral-200 rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
               <form onSubmit={(e) => {
                 e.preventDefault();
@@ -2023,6 +2070,17 @@ export default function AdminPanel() {
                 const infoImagesRaw = (fd.get("infoImages") as string || "").trim();
                 const infoImages = editInfoImages.length > 0 ? editInfoImages : (infoImagesRaw ? infoImagesRaw.split("\n").map(u => u.trim()).filter(u => u.length > 2).map(u => u.startsWith("http") ? u : (u.startsWith("//") ? "https:" + u : "https://" + u)) : []);
 
+                const variantsRaw = (fd.get("variantsJson") as string || "").trim();
+                let variants = undefined;
+                if (variantsRaw) {
+                  try {
+                    variants = JSON.parse(variantsRaw);
+                  } catch (err) {
+                    showToast("Error parsing Product Variants JSON. Saving product without updating variants.");
+                    console.error("Failed to parse variants JSON", err);
+                  }
+                }
+
                 handleUpdateProduct(editingProduct.id, {
                   brand,
                   name,
@@ -2036,117 +2094,148 @@ export default function AdminPanel() {
                   servings,
                   servingSize,
                   gallery: gallery.length > 0 ? gallery : [image],
-                  infoImages: infoImages
+                  infoImages: infoImages,
+                  variants
                 });
                 showToast("Successfully saved modification specifications!");
-              }} className="space-y-4 text-xs">
+              }} className="flex flex-col min-h-0 flex-1">
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Brand Designation</label>
-                    <input type="text" name="brand" required defaultValue={editingProduct.brand} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-semibold" />
+                <div className="p-6 overflow-y-auto space-y-5 text-xs flex-1">
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Brand Designation</label>
+                      <input type="text" name="brand" required defaultValue={editingProduct.brand} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-semibold" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Category Classification</label>
+                      <select name="category" defaultValue={editingProduct.category} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-semibold">
+                        <option value="Creatine">Creatine</option>
+                        <option value="Protein">Protein</option>
+                        <option value="Peanut Butter">Peanut Butter</option>
+                        <option value="Collagen">Collagen</option>
+                        <option value="L-Carnitine">L-Carnitine</option>
+                        <option value="Pre-Workout">Pre-Workout</option>
+                        <option value="Essentials">Essentials</option>
+                      </select>
+                    </div>
                   </div>
+
                   <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Category Classification</label>
-                    <select name="category" defaultValue={editingProduct.category} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-semibold">
-                      <option value="Creatine">Creatine</option>
-                      <option value="Protein">Protein</option>
-                      <option value="Peanut Butter">Peanut Butter</option>
-                      <option value="Collagen">Collagen</option>
-                      <option value="L-Carnitine">L-Carnitine</option>
-                      <option value="Pre-Workout">Pre-Workout</option>
-                      <option value="Essentials">Essentials</option>
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Supplement Full Name Label</label>
+                    <input type="text" name="name" required defaultValue={editingProduct.name} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-semibold" />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Adjusted Price (Rs.)</label>
+                      <input type="number" name="price" required min="1" defaultValue={editingProduct.price} className="w-full bg-neutral-50 p-2.5 border border-[#FFCD00] text-black font-extrabold rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Compare-At / Original Price (Rs.)</label>
+                      <input type="number" name="originalPrice" required min="1" defaultValue={editingProduct.originalPrice} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Total Servings count</label>
+                      <input type="text" name="servings" defaultValue={editingProduct.servings || ""} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Serving size weight</label>
+                      <input type="text" name="servingSize" defaultValue={editingProduct.servingSize || ""} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    {renderImageUploader(
+                      "Main Supplement Image",
+                      editMainImage,
+                      false,
+                      (imgs) => setEditMainImage(imgs[0] || ""),
+                      () => setEditMainImage(""),
+                      "edit-main-upload",
+                      "image"
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    {renderImageUploader(
+                      "Product Gallery Album",
+                      editGallery,
+                      true,
+                      (imgs) => setEditGallery(imgs),
+                      (idx) => setEditGallery((prev) => prev.filter((_, i) => i !== idx)),
+                      "edit-gallery-upload",
+                      "gallery"
+                    )}
+                    <span className="text-[9px] text-gray-400 block leading-tight mt-1">These images populate the rotating image gallery at the top of the details view.</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    {renderImageUploader(
+                      "Product Detail Banners",
+                      editInfoImages,
+                      true,
+                      (imgs) => setEditInfoImages(imgs),
+                      (idx) => setEditInfoImages((prev) => prev.filter((_, i) => i !== idx)),
+                      "edit-info-upload",
+                      "infoImages"
+                    )}
+                    <span className="text-[9px] text-gray-400 block leading-tight mt-1">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Inventory Status Flag</label>
+                    <select name="isSoldOut" defaultValue={String(editingProduct.isSoldOut)} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-bold">
+                      <option value="false">Active (In Stock)</option>
+                      <option value="true">Sold Out (Disable Add to Cart)</option>
                     </select>
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Supplement Full Name Label</label>
-                  <input type="text" name="name" required defaultValue={editingProduct.name} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-semibold" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Adjusted Price (Rs.)</label>
-                    <input type="number" name="price" required min="1" defaultValue={editingProduct.price} className="w-full bg-neutral-50 p-2 border border-[#FFCD00] text-black font-extrabold" />
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Product Variants & Quantity Pricing (JSON, Optional)</label>
+                    <textarea 
+                      name="variantsJson" 
+                      rows={5} 
+                      autoComplete="off" 
+                      autoCorrect="off" 
+                      autoCapitalize="off" 
+                      spellCheck="false"
+                      defaultValue={editingProduct.variants ? JSON.stringify(editingProduct.variants, null, 2) : ""} 
+                      placeholder={`[
+  {
+    "name": "1 Pack (Standard)",
+    "price": ${editingProduct.price},
+    "originalPrice": ${editingProduct.originalPrice},
+    "servings": "${editingProduct.servings || ""}",
+    "servingSize": "${editingProduct.servingSize || ""}",
+    "isSoldOut": false
+  }
+]`} 
+                      className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-mono text-base sm:text-[10px]" 
+                    />
+                    <span className="text-[9px] text-gray-400 block leading-tight mt-1">Define custom multi-pack discount tiers or size variations with separate pricing. Leave empty to auto-generate default 1, 2, and 3-pack discounts for all products automatically!</span>
                   </div>
+
                   <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Compare-At / Original Price (Rs.)</label>
-                    <input type="number" name="originalPrice" required min="1" defaultValue={editingProduct.originalPrice} className="w-full bg-neutral-50 p-2 border border-neutral-300" />
+                    <label className="text-[10px] uppercase font-mono font-bold text-gray-500 block">Supplement Description Narrative</label>
+                    <textarea name="description" rows={4} required defaultValue={editingProduct.description} className="w-full bg-neutral-50 p-2.5 border border-neutral-300 rounded-md focus:border-[#FFCD00] focus:ring-1 focus:ring-[#FFCD00] outline-none transition-colors font-sans" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Total Servings count</label>
-                    <input type="text" name="servings" defaultValue={editingProduct.servings || ""} className="w-full bg-neutral-50 p-2 border border-neutral-300" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Serving size weight</label>
-                    <input type="text" name="servingSize" defaultValue={editingProduct.servingSize || ""} className="w-full bg-neutral-50 p-2 border border-neutral-300" />
-                  </div>
-                </div>
-
-                {renderImageUploader(
-                  "Main Supplement Image",
-                  editMainImage,
-                  false,
-                  (imgs) => setEditMainImage(imgs[0] || ""),
-                  () => setEditMainImage(""),
-                  "edit-main-upload",
-                  "image"
-                )}
-
-                <div className="space-y-1">
-                  {renderImageUploader(
-                    "Product Gallery Album",
-                    editGallery,
-                    true,
-                    (imgs) => setEditGallery(imgs),
-                    (idx) => setEditGallery((prev) => prev.filter((_, i) => i !== idx)),
-                    "edit-gallery-upload",
-                    "gallery"
-                  )}
-                  <span className="text-[8px] text-gray-400 block leading-tight">These images populate the rotating image gallery at the top of the details view.</span>
-                </div>
-
-                <div className="space-y-1">
-                  {renderImageUploader(
-                    "Product Detail Banners",
-                    editInfoImages,
-                    true,
-                    (imgs) => setEditInfoImages(imgs),
-                    (idx) => setEditInfoImages((prev) => prev.filter((_, i) => i !== idx)),
-                    "edit-info-upload",
-                    "infoImages"
-                  )}
-                  <span className="text-[8px] text-gray-400 block leading-tight">Extra graphical images/banners shown below the description to offer more visual details about the product.</span>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Inventory Status Flag</label>
-                  <select name="isSoldOut" defaultValue={String(editingProduct.isSoldOut)} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-bold">
-                    <option value="false">Active (In Stock)</option>
-                    <option value="true">Sold Out (Disable Add to Cart)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-mono font-bold text-gray-500 block">Supplement Description Narrative</label>
-                  <textarea name="description" rows={4} required defaultValue={editingProduct.description} className="w-full bg-neutral-50 p-2 border border-neutral-300 font-sans" />
-                </div>
-
-                <div className="pt-2 flex gap-2">
+                <div className="p-5 border-t border-neutral-200 bg-neutral-50 rounded-b-xl flex gap-3 shrink-0">
                   <button
                     type="button"
                     onClick={() => setEditingProduct(null)}
-                    className="flex-1 py-2.5 border border-neutral-300 hover:bg-neutral-50 text-neutral-800 uppercase font-mono text-[10px] font-bold"
+                    className="flex-1 py-3 border border-neutral-300 hover:bg-neutral-100 text-neutral-800 uppercase font-mono text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 bg-black hover:bg-neutral-900 text-white uppercase font-mono text-[10px] font-bold"
+                    className="flex-1 py-3 bg-black hover:bg-neutral-900 text-white uppercase font-mono text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
                   >
                     Save Specifications
                   </button>

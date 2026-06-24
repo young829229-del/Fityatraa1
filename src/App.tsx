@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dumbbell, Sparkles, SlidersHorizontal, Search, ArrowRight, ShieldCheck, Heart, Star, Navigation, MapPin, CheckCircle, TrendingUp, Truck, Lock, Unlock } from "lucide-react";
+import { Dumbbell, Sparkles, SlidersHorizontal, Search, ArrowRight, ShieldCheck, Heart, Star, Navigation, MapPin, CheckCircle, TrendingUp, Truck, Lock, Unlock, User, UserPlus, LogOut } from "lucide-react";
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
 import ProductDetailModal from "./components/ProductDetailModal";
@@ -133,6 +133,18 @@ export default function App() {
     return localStorage.getItem("fityatra_remember_me") !== "false";
   });
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  // Unified Account Portal Authentication states
+  const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(() => {
+    const saved = localStorage.getItem("fityatra_current_user");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [authEmail, setAuthEmail] = useState<string>("");
+  const [authPassword, setAuthPassword] = useState<string>("");
+  const [authName, setAuthName] = useState<string>("");
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Active policy type modal state
   const [activePolicy, setActivePolicy] = useState<"shipping" | "refund" | "authenticity" | "terms" | "privacy" | null>(null);
@@ -152,31 +164,82 @@ export default function App() {
     }, 3000);
   };
 
-  // Synchronize URL routing for separate link /admin
-  useEffect(() => {
-    const handleLocationChange = () => {
-      const path = window.location.pathname;
-      const hash = window.location.hash;
-      if (path === "/admin" || path.startsWith("/admin/") || hash === "#admin") {
-        setActiveTab("admin");
-        setIsCracked(true);
-      } else {
-        // If we are currently on "admin" but pathname is NOT /admin, switch back to home
-        setActiveTab((prev) => (prev === "admin" ? "home" : prev));
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    const trimmedEmail = authEmail.trim().toLowerCase();
+    const trimmedPassword = authPassword.trim();
+    const trimmedName = authName.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setAuthError("Email and Password are required.");
+      return;
+    }
+
+    if (authMode === "signup") {
+      if (!trimmedName) {
+        setAuthError("Full Name is required for registration.");
+        return;
       }
-    };
 
-    // Run once on mount
-    handleLocationChange();
+      // Check if trying to sign up as admin
+      if (trimmedEmail === "fityatra@gmail.com") {
+        setAuthError("This email address is reserved.");
+        return;
+      }
 
-    window.addEventListener("popstate", handleLocationChange);
-    window.addEventListener("hashchange", handleLocationChange);
+      // Get existing users
+      const usersRaw = localStorage.getItem("fityatra_registered_users");
+      const users = usersRaw ? JSON.parse(usersRaw) : [];
+      
+      const exists = users.some((u: any) => u.email === trimmedEmail);
+      if (exists) {
+        setAuthError("An account with this email already exists.");
+        return;
+      }
 
-    return () => {
-      window.removeEventListener("popstate", handleLocationChange);
-      window.removeEventListener("hashchange", handleLocationChange);
-    };
-  }, []);
+      // Register user
+      const newUser = { email: trimmedEmail, password: trimmedPassword, name: trimmedName };
+      users.push(newUser);
+      localStorage.setItem("fityatra_registered_users", JSON.stringify(users));
+
+      // Log them in
+      const userSession = { email: trimmedEmail, name: trimmedName };
+      setCurrentUser(userSession);
+      localStorage.setItem("fityatra_current_user", JSON.stringify(userSession));
+
+      triggerToast(`Account created successfully! Welcome to FitYatra, ${trimmedName}.`);
+      setShowAuthModal(false);
+    } else {
+      // SIGN IN MODE
+      // 1. Check if Admin credentials
+      if (trimmedEmail === "fityatra@gmail.com" && trimmedPassword === "aashish123") {
+        setIsAdminAuthenticated(true);
+        setIsCracked(true);
+        setActiveTab("admin");
+        localStorage.setItem("fityatra_admin_auth", "true");
+        localStorage.setItem("fityatra_admin_email", trimmedEmail);
+        triggerToast("ACCESS AUTHORIZED. Welcome back, administrator.");
+        setShowAuthModal(false);
+        return;
+      }
+
+      // 2. Otherwise check customer accounts
+      const usersRaw = localStorage.getItem("fityatra_registered_users");
+      const users = usersRaw ? JSON.parse(usersRaw) : [];
+
+      const match = users.find((u: any) => u.email === trimmedEmail && u.password === trimmedPassword);
+      if (match) {
+        const userSession = { email: match.email, name: match.name };
+        setCurrentUser(userSession);
+        localStorage.setItem("fityatra_current_user", JSON.stringify(userSession));
+        triggerToast(`Welcome back, ${match.name}!`);
+        setShowAuthModal(false);
+      } else {
+        setAuthError("Invalid credentials match. Try again or Register.");
+      }
+    }
+  };
 
   // Wishlist Action Handlers
   const handleToggleWishlist = (product: Product) => {
@@ -247,16 +310,8 @@ export default function App() {
   const handleSectionNavigation = (section: string) => {
     setActiveTab(section);
     
-    // Update the browser URL dynamically
     if (section === "admin") {
       setIsCracked(true);
-      if (window.location.pathname !== "/admin") {
-        window.history.pushState(null, "", "/admin");
-      }
-    } else {
-      if (window.location.pathname !== "/") {
-        window.history.pushState(null, "", "/");
-      }
     }
 
     if (section === "home") {
@@ -610,6 +665,41 @@ export default function App() {
                     Contact distributor Center
                   </button>
                 </li>
+                <li className="pt-2">
+                  {currentUser ? (
+                    <div className="space-y-1 font-mono text-[10px] text-zinc-400 bg-zinc-900/40 p-2.5 border border-zinc-800/40">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-zinc-200">Hi, {currentUser.name}!</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCurrentUser(null);
+                          localStorage.removeItem("fityatra_current_user");
+                          triggerToast("Logged out of customer account.");
+                        }}
+                        className="text-amber-500 hover:text-amber-400 transition-colors cursor-pointer block uppercase text-[9px] font-bold mt-1"
+                      >
+                        [ Sign Out ]
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      id="footer-account-login-btn"
+                      onClick={() => {
+                        setAuthMode("signin");
+                        setAuthError(null);
+                        setAuthEmail("");
+                        setAuthPassword("");
+                        setAuthName("");
+                        setShowAuthModal(true);
+                      }}
+                      className="cursor-pointer bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500 hover:text-black font-mono text-amber-400 uppercase tracking-widest px-3 py-1.5 text-[9px] transition-all duration-200 block w-full text-center"
+                    >
+                      Customer Login / Sign Up
+                    </button>
+                  )}
+                </li>
               </ul>
             </div>
 
@@ -883,6 +973,111 @@ export default function App() {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* OVERLAY MODAL: Unified Customer / Admin Login & Registration Portal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="bg-white border-2 border-black max-w-sm w-full p-6 relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowAuthModal(false);
+                setAuthError(null);
+              }}
+              className="absolute top-4 right-4 text-black hover:text-red-500 font-mono text-xs font-bold uppercase transition-colors cursor-pointer"
+            >
+              [ Close ]
+            </button>
+
+            <div className="text-center mb-6 space-y-1 pt-2">
+              <span className="inline-block px-2 py-0.5 bg-black text-white font-mono text-[8px] uppercase tracking-widest font-black">
+                Account Dispatch
+              </span>
+              <h3 className="font-sans font-black text-xl tracking-tight text-black uppercase">
+                {authMode === "signin" ? "Member Sign In" : "Create Account"}
+              </h3>
+              <p className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">
+                {authMode === "signin"
+                  ? "Access your dashboard and orders"
+                  : "Join FitYatra Nepal supplement network"}
+              </p>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+              {authMode === "signup" && (
+                <div className="space-y-1">
+                  <label className="font-mono text-[9px] uppercase tracking-wider text-gray-500 block font-bold">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={authName}
+                    onChange={(e) => setAuthName(e.target.value)}
+                    className="w-full bg-gray-50 border border-black py-2.5 px-3 font-sans text-xs text-black placeholder-gray-400 focus:border-amber-500 focus:bg-white outline-none transition-all rounded-none"
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="font-mono text-[9px] uppercase tracking-wider text-gray-500 block font-bold">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="name@gmail.com"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full bg-gray-50 border border-black py-2.5 px-3 font-sans text-xs text-black placeholder-gray-400 focus:border-amber-500 focus:bg-white outline-none transition-all rounded-none"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-mono text-[9px] uppercase tracking-wider text-gray-500 block font-bold">
+                  Security Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full bg-gray-50 border border-black py-2.5 px-3 font-sans text-xs text-black placeholder-gray-400 focus:border-amber-500 focus:bg-white outline-none transition-all rounded-none"
+                  required
+                />
+              </div>
+
+              {authError && (
+                <div className="p-2 bg-red-50 border border-red-200 text-red-600 font-mono text-[9px] leading-tight uppercase font-bold text-center">
+                  ⚠ {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-black hover:bg-neutral-900 text-white font-mono text-xs font-bold uppercase tracking-widest py-3 transition-colors rounded-none cursor-pointer"
+              >
+                {authMode === "signin" ? "Sign In" : "Register"}
+              </button>
+            </form>
+
+            <div className="mt-5 pt-4 border-t border-gray-100 text-center">
+              <button
+                onClick={() => {
+                  setAuthMode(authMode === "signin" ? "signup" : "signin");
+                  setAuthError(null);
+                }}
+                className="font-mono text-[9px] text-gray-500 hover:text-black uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                {authMode === "signin"
+                  ? "New to FitYatra? Create an Account →"
+                  : "Already have an account? Sign In →"}
+              </button>
+            </div>
           </div>
         </div>
       )}

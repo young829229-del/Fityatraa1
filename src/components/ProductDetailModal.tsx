@@ -4,7 +4,7 @@ import {
   Share2, RotateCcw, Award, Check, Plus, Minus, ChevronLeft, ChevronRight, Heart,
   ChevronDown, HelpCircle
 } from "lucide-react";
-import { Product } from "../types";
+import { Product, ProductVariant } from "../types";
 import { 
   getProductReviews, 
   addProductReview, 
@@ -96,9 +96,73 @@ export default function ProductDetailModal({
     }
   };
 
-  const { weights, flavors } = getVariants();
-  const [selectedWeight, setSelectedWeight] = useState(weights[0]);
+  // Get active variants (user custom or auto-generated default quantity options)
+  const getProductVariants = (p: Product): ProductVariant[] => {
+    if (p.variants && p.variants.length > 0) {
+      return p.variants;
+    }
+    
+    // Auto-generate default packs
+    const p1 = p.price;
+    const op1 = p.originalPrice || Math.round(p.price * 1.35);
+    const servingsVal = p.servings || "";
+    const sizeVal = p.servingSize || "";
+    
+    const p2 = Math.round(p1 * 2 * 0.90);
+    const op2 = op1 * 2;
+    
+    const p3 = Math.round(p1 * 3 * 0.85);
+    const op3 = op1 * 3;
+    
+    const doubleServings = servingsVal ? `2 x ${servingsVal}` : "";
+    const tripleServings = servingsVal ? `3 x ${servingsVal}` : "";
+    
+    return [
+      {
+        name: "1 Pack (Standard)",
+        price: p1,
+        originalPrice: op1,
+        servings: servingsVal,
+        servingSize: sizeVal,
+        isSoldOut: p.isSoldOut
+      },
+      {
+        name: "2 Pack (Save Extra 10%)",
+        price: p2,
+        originalPrice: op2,
+        servings: doubleServings,
+        servingSize: sizeVal,
+        isSoldOut: p.isSoldOut
+      },
+      {
+        name: "3 Pack (Best Value - Save 15%)",
+        price: p3,
+        originalPrice: op3,
+        servings: tripleServings,
+        servingSize: sizeVal,
+        isSoldOut: p.isSoldOut
+      }
+    ];
+  };
+
+  const productVariants = getProductVariants(product);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(productVariants[0]);
+  const { flavors } = getVariants();
   const [selectedFlavor, setSelectedFlavor] = useState(flavors[0]);
+
+  const getActiveVariantProduct = () => {
+    const variantName = selectedVariant ? selectedVariant.name : "Standard";
+    return {
+      ...product,
+      id: `${product.id}-${variantName.replace(/\s+/g, '-').toLowerCase()}-${selectedFlavor.replace(/\s+/g, '-').toLowerCase()}`,
+      name: `${product.name} (${variantName} - ${selectedFlavor})`,
+      price: selectedVariant ? selectedVariant.price : product.price,
+      originalPrice: selectedVariant ? selectedVariant.originalPrice : product.originalPrice,
+      servings: selectedVariant ? selectedVariant.servings : product.servings,
+      servingSize: selectedVariant ? selectedVariant.servingSize : product.servingSize,
+      isSoldOut: selectedVariant ? (selectedVariant.isSoldOut ?? product.isSoldOut) : product.isSoldOut
+    };
+  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -245,8 +309,10 @@ export default function ProductDetailModal({
     ? parseFloat((reviewsList.reduce((sum, r) => sum + r.rating, 0) / numReviews).toFixed(1))
     : product.rating;
 
-  const calculatedDiscount = product.originalPrice && product.price
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const currentPrice = selectedVariant ? selectedVariant.price : product.price;
+  const currentOriginalPrice = selectedVariant ? selectedVariant.originalPrice : product.originalPrice;
+  const calculatedDiscount = currentOriginalPrice && currentPrice
+    ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100)
     : product.discountPercentage || 23;
 
   return (
@@ -402,13 +468,13 @@ export default function ProductDetailModal({
             <div className="space-y-1 bg-neutral-50/50 p-4.5 rounded-xl border border-neutral-100">
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-neutral-950 tracking-tight font-geometric">
-                  Rs {product.price.toLocaleString()}
+                  Rs {currentPrice.toLocaleString()}
                 </span>
               </div>
               
-              {product.originalPrice && (
+              {currentOriginalPrice && (
                 <div className="flex items-center gap-2.5 text-xs text-neutral-500">
-                  <span className="font-geometric">Marked Price Rs {product.originalPrice.toLocaleString()}</span>
+                  <span className="font-geometric">Marked Price Rs {currentOriginalPrice.toLocaleString()}</span>
                   <span className="text-emerald-600 font-bold ml-1.5 text-sm">
                     {calculatedDiscount}% OFF
                   </span>
@@ -428,24 +494,57 @@ export default function ProductDetailModal({
               </div>
             </div>
 
-            {/* Weight Choices */}
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-neutral-900 block font-sans tracking-wide">Weight Options</span>
-              <div className="flex gap-2 flex-wrap">
-                {weights.map((wt) => {
-                  const isSelected = selectedWeight === wt;
+            {/* Quantity Packs / Package Choices */}
+            <div className="space-y-2.5">
+              <span className="text-xs font-bold text-neutral-900 block font-sans tracking-wide flex items-center gap-1.5">
+                <ShoppingCart className="w-3.5 h-3.5 text-neutral-500" /> Choose Quantity & Price Package
+              </span>
+              <div className="grid grid-cols-1 gap-2">
+                {productVariants.map((variant) => {
+                  const isSelected = selectedVariant?.name === variant.name;
+                  const discount = variant.originalPrice && variant.price
+                    ? Math.round(((variant.originalPrice - variant.price) / variant.originalPrice) * 100)
+                    : 0;
                   return (
                     <button
-                      key={wt}
+                      key={variant.name}
                       type="button"
-                      onClick={() => setSelectedWeight(wt)}
-                      className={`cursor-pointer px-5 py-2.5 text-xs font-bold font-sans tracking-wide rounded-lg border transition-all ${
+                      onClick={() => setSelectedVariant(variant)}
+                      className={`w-full text-left cursor-pointer p-3 rounded-xl border transition-all duration-200 flex items-center justify-between gap-3 ${
                         isSelected 
-                          ? "bg-[#FFCD00] border-[#FFCD00] text-black shadow-xs" 
-                          : "bg-white hover:bg-neutral-50 border-neutral-250 text-neutral-700"
+                          ? "bg-[#FFFDF3] border-[#FFCD00] ring-1 ring-[#FFCD00]/30 shadow-sm scale-[1.01]" 
+                          : "bg-white hover:bg-neutral-50 border-neutral-200 text-neutral-700"
                       }`}
                     >
-                      {wt}
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          isSelected ? "border-[#FFCD00] bg-[#FFCD00]" : "border-neutral-350"
+                        }`}>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black"></div>}
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold font-sans block text-neutral-900">
+                            {variant.name}
+                          </span>
+                          {variant.servings && (
+                            <span className="text-[10px] text-neutral-500 block">
+                              {variant.servings} {variant.servingSize ? `• Size: ${variant.servingSize}` : ""}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-black font-geometric text-neutral-950 block">
+                          Rs. {variant.price.toLocaleString()}
+                        </span>
+                        {variant.originalPrice > variant.price && (
+                          <div className="flex items-center justify-end gap-1.5 text-[10px]">
+                            <span className="text-neutral-400 line-through font-geometric">Rs. {variant.originalPrice.toLocaleString()}</span>
+                            <span className="text-emerald-600 font-bold font-sans">-{discount}%</span>
+                          </div>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
@@ -554,7 +653,7 @@ export default function ProductDetailModal({
               ) : (
                 <button
                   onClick={() => {
-                    onAddToCart(product, detailQuantity);
+                    onAddToCart(getActiveVariantProduct(), detailQuantity);
                     onClose();
                   }}
                   className="w-full py-4 bg-[#FFCD00] hover:bg-[#E2B600] text-black font-extrabold rounded-lg text-sm uppercase tracking-widest transition-all active:scale-[0.98] shadow-md cursor-pointer flex items-center justify-center gap-2"
@@ -954,40 +1053,44 @@ export default function ProductDetailModal({
                   </div>
                 )}
 
-                {activeTab === "nutrition" && (
-                  <div className="space-y-3">
-                    {/* Serving Specs */}
-                    {(product.servings || product.servingSize) && (
-                      <div className="grid grid-cols-2 gap-2 bg-neutral-50 p-2.5 rounded-lg border border-neutral-100 font-semibold mb-2">
-                        {product.servings && (
-                          <div>
-                            <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-mono">Pack Servings</span>
-                            <span className="text-xs text-neutral-800">{product.servings} Servings</span>
-                          </div>
-                        )}
-                        {product.servingSize && (
-                          <div>
-                            <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-mono">Serving Scope</span>
-                            <span className="text-xs text-neutral-800">{product.servingSize}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                {activeTab === "nutrition" && (() => {
+                  const currentServings = selectedVariant?.servings || product.servings;
+                  const currentServingSize = selectedVariant?.servingSize || product.servingSize;
+                  return (
+                    <div className="space-y-3">
+                      {/* Serving Specs */}
+                      {(currentServings || currentServingSize) && (
+                        <div className="grid grid-cols-2 gap-2 bg-neutral-50 p-2.5 rounded-lg border border-neutral-100 font-semibold mb-2">
+                          {currentServings && (
+                            <div>
+                              <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-mono">Pack Servings</span>
+                              <span className="text-xs text-neutral-800">{currentServings}</span>
+                            </div>
+                          )}
+                          {currentServingSize && (
+                            <div>
+                              <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-mono">Serving Scope</span>
+                              <span className="text-xs text-neutral-800">{currentServingSize}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                    {product.specs ? (
-                      <div className="border border-neutral-150 rounded-lg overflow-hidden divide-y divide-neutral-100">
-                        {Object.entries(product.specs).map(([key, value]) => (
-                          <div key={key} className="flex justify-between p-2 text-xs bg-white">
-                            <span className="font-semibold text-gray-500 capitalize">{key.replace(/_/g, " ")}</span>
-                            <span className="text-gray-900 font-medium">{value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="italic text-gray-400">Nutritional analyses and profile certified by independent third-party laboratories.</p>
-                    )}
-                  </div>
-                )}
+                      {product.specs ? (
+                        <div className="border border-neutral-150 rounded-lg overflow-hidden divide-y divide-neutral-100">
+                          {Object.entries(product.specs).map(([key, value]) => (
+                            <div key={key} className="flex justify-between p-2 text-xs bg-white">
+                              <span className="font-semibold text-gray-500 capitalize">{key.replace(/_/g, " ")}</span>
+                              <span className="text-gray-900 font-medium">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="italic text-gray-400">Nutritional analyses and profile certified by independent third-party laboratories.</p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {activeTab === "reviews" && (
                   <div className="space-y-6 animate-fade-in text-left">
@@ -1393,7 +1496,7 @@ export default function ProductDetailModal({
             <button 
               type="button"
               onClick={() => {
-                onAddToCart(product, detailQuantity);
+                onAddToCart(getActiveVariantProduct(), detailQuantity);
                 onClose();
               }}
               className="flex-1 bg-[#FFCD00] hover:bg-[#E2B600] text-black transition-colors py-3 px-3 rounded-lg text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"

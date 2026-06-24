@@ -309,6 +309,9 @@ export default function ProductCard({
                 Size: {product.servingSize}
               </span>
             )}
+            <span className="text-[8px] sm:text-[9px] font-mono font-bold tracking-wider bg-[#FFFDF3] text-amber-700 px-2 py-0.5 border border-amber-200/50 rounded-xs">
+              ⚡ Multi-Pack Savings
+            </span>
           </div>
         </div>
 

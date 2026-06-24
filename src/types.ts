@@ -1,3 +1,12 @@
+export interface ProductVariant {
+  name: string;
+  price: number;
+  originalPrice: number;
+  servings?: string;
+  servingSize?: string;
+  isSoldOut?: boolean;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -18,6 +27,7 @@ export interface Product {
   nutritionFacts?: { [key: string]: string };
   gallery?: string[];
   infoImages?: string[];
+  variants?: ProductVariant[];
 }
 
 export interface CartItem {

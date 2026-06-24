@@ -97,6 +97,21 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+
+    // Fallback for non-API, non-asset paths to support SPA routing in development
+    app.get("*", async (req, res, next) => {
+      if (req.originalUrl.startsWith("/api") || req.originalUrl.includes(".")) {
+        return next();
+      }
+      try {
+        const template = fs.readFileSync(path.resolve(process.cwd(), "index.html"), "utf-8");
+        const html = await vite.transformIndexHtml(req.originalUrl, template);
+        res.status(200).set({ "Content-Type": "text/html" }).end(html);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
