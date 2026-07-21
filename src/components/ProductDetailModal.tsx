@@ -46,6 +46,21 @@ export default function ProductDetailModal({
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewComment, setNewReviewComment] = useState("");
   const [newReviewImages, setNewReviewImages] = useState<string[]>([]);
+  const [isLeaveReviewOpen, setIsLeaveReviewOpen] = useState(false);
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const leftCarouselRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    }
+  };
   
   // Inline review editing states
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
@@ -150,16 +165,26 @@ export default function ProductDetailModal({
   const { flavors } = getVariants();
   const [selectedFlavor, setSelectedFlavor] = useState(flavors[0]);
 
+  React.useEffect(() => {
+    const updatedVariants = getProductVariants(product);
+    setSelectedVariant(updatedVariants[0]);
+    const { flavors: updatedFlavors } = getVariants();
+    setSelectedFlavor(updatedFlavors[0]);
+    setActiveImageIndex(0);
+  }, [product.id]);
+
   const getActiveVariantProduct = () => {
     const variantName = selectedVariant ? selectedVariant.name : "Standard";
+    const hasMultipleFlavors = flavors.length > 1;
+    const flavorSuffix = hasMultipleFlavors ? ` - ${selectedFlavor}` : "";
     return {
       ...product,
-      id: `${product.id}-${variantName.replace(/\s+/g, '-').toLowerCase()}-${selectedFlavor.replace(/\s+/g, '-').toLowerCase()}`,
-      name: `${product.name} (${variantName} - ${selectedFlavor})`,
+      id: `${product.id}-${variantName.replace(/\s+/g, '-').toLowerCase()}${hasMultipleFlavors ? `-${selectedFlavor.replace(/\s+/g, '-').toLowerCase()}` : ""}`,
+      name: `${product.name} (${variantName}${flavorSuffix})`,
       price: selectedVariant ? selectedVariant.price : product.price,
       originalPrice: selectedVariant ? selectedVariant.originalPrice : product.originalPrice,
-      servings: selectedVariant ? selectedVariant.servings : product.servings,
-      servingSize: selectedVariant ? selectedVariant.servingSize : product.servingSize,
+      servings: selectedVariant ? (selectedVariant.servings || product.servings) : product.servings,
+      servingSize: selectedVariant ? (selectedVariant.servingSize || product.servingSize) : product.servingSize,
       isSoldOut: selectedVariant ? (selectedVariant.isSoldOut ?? product.isSoldOut) : product.isSoldOut
     };
   };
@@ -272,9 +297,20 @@ export default function ProductDetailModal({
     setNewReviewComment("");
     setNewReviewImages([]);
     setNewReviewVideos([]);
+    setIsLeaveReviewOpen(false);
     
     setShareConfig({ showToast: true, text: "Feedback added successfully!" });
     setTimeout(() => setShareConfig({ showToast: false, text: "" }), 3000);
+
+    // Auto scroll the carousel to the left/start to show the new review immediately
+    setTimeout(() => {
+      if (carouselRef.current) {
+        carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      }
+      if (leftCarouselRef.current) {
+        leftCarouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      }
+    }, 100);
   };
 
   // Delete review
@@ -418,6 +454,119 @@ export default function ProductDetailModal({
             )}
           </div>
 
+          {/* CUSTOMER REVIEWS SECTION (HORIZONTALLY SLIDING CAROUSEL) */}
+          <div className="w-full mt-6 pt-5 border-t border-neutral-100 flex flex-col gap-3">
+            <div className="flex justify-between items-center w-full">
+              <span className="text-[10px] font-sans font-bold text-neutral-800 uppercase tracking-widest">
+                Customer Reviews ({numReviews})
+              </span>
+              
+              {/* Slide Buttons for Navigation */}
+              {reviewsList.length > 1 && (
+                <div className="flex gap-1.5 select-none">
+                  <button
+                    type="button"
+                    onClick={() => leftCarouselRef.current?.scrollBy({ left: -280, behavior: "smooth" })}
+                    className="p-1 rounded-full border border-neutral-250 hover:border-black text-neutral-500 hover:text-black transition-all bg-white cursor-pointer"
+                    aria-label="Previous reviews"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => leftCarouselRef.current?.scrollBy({ left: 280, behavior: "smooth" })}
+                    className="p-1 rounded-full border border-neutral-250 hover:border-black text-neutral-500 hover:text-black transition-all bg-white cursor-pointer"
+                    aria-label="Next reviews"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {reviewsList.length === 0 ? (
+              <p className="text-xs text-neutral-400 italic py-2 text-center">No reviews yet. Be the first to leave one!</p>
+            ) : (
+              <div className="relative w-full overflow-hidden">
+                <div 
+                  ref={leftCarouselRef}
+                  className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-none py-1 w-full"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {reviewsList.map((rev) => (
+                    <div 
+                      key={rev.id} 
+                      className="w-[90%] sm:w-[290px] shrink-0 snap-start bg-neutral-50 p-4 rounded-xl border border-neutral-150 shadow-2xs flex flex-col justify-between hover:border-neutral-300 transition-colors text-left"
+                    >
+                      <div className="space-y-2 text-left">
+                        {/* Author Name and Date */}
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-neutral-900 text-xs font-sans">
+                              {rev.name}
+                            </span>
+                            {rev.verified && (
+                              <span className="bg-emerald-50 text-emerald-800 border border-emerald-150 text-[8px] font-bold px-1.5 py-0.5 rounded font-mono uppercase tracking-wider shrink-0">
+                                Verified
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[9px] text-neutral-400 font-mono shrink-0">
+                            {rev.date || "Just now"}
+                          </span>
+                        </div>
+
+                        {/* Star Rating Row */}
+                        <div className="flex text-[#FFCD00]">
+                          {Array.from({ length: 5 }).map((_, sIdx) => {
+                            const filled = sIdx < rev.rating;
+                            return (
+                              <Star key={sIdx} className={`w-3.5 h-3.5 ${filled ? "fill-current" : "text-neutral-250"}`} />
+                            );
+                          })}
+                        </div>
+
+                        {/* Review text */}
+                        <p className="text-neutral-700 text-xs leading-relaxed font-sans italic line-clamp-3">
+                          "{rev.comment}"
+                        </p>
+
+                        {/* Review Pictures inside Carousel Card */}
+                        {rev.images && rev.images.length > 0 && (
+                          <div className="flex gap-1.5 pt-1 overflow-x-auto scrollbar-none">
+                            {rev.images.map((img, imgIdx) => (
+                              <div 
+                                key={imgIdx} 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPreviewImageUrl(img);
+                                }}
+                                className="w-10 h-10 rounded-md overflow-hidden border border-neutral-200 hover:border-neutral-400 transition-colors shrink-0 cursor-zoom-in"
+                              >
+                                <img src={img} alt="review snap" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* CENTERED "LEAVE A REVIEW" ACTION BUTTON */}
+            <div className="flex justify-center pt-1.5">
+              <button
+                type="button"
+                onClick={() => setIsLeaveReviewOpen(true)}
+                className="cursor-pointer bg-neutral-900 hover:bg-neutral-800 active:scale-95 text-white text-[10px] font-bold font-sans tracking-widest uppercase px-6 py-2.5 rounded-lg transition-all shadow-2xs"
+              >
+                Leave a Review
+              </button>
+            </div>
+          </div>
+
           {/* Genuine Seal Badges */}
           <div className="w-full border-t border-neutral-100 pt-6 mt-4 flex flex-col gap-2 bg-neutral-50 p-4 rounded-xl">
             <div className="flex items-center gap-2">
@@ -552,28 +701,30 @@ export default function ProductDetailModal({
             </div>
 
             {/* Flavoured Choices */}
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-neutral-900 block font-sans tracking-wide">Flavour Options</span>
-              <div className="flex gap-2 flex-wrap">
-                {flavors.map((flv) => {
-                  const isSelected = selectedFlavor === flv;
-                  return (
-                    <button
-                      key={flv}
-                      type="button"
-                      onClick={() => setSelectedFlavor(flv)}
-                      className={`cursor-pointer px-4 py-2 text-xs font-semibold font-sans rounded-lg border transition-all ${
-                        isSelected 
-                          ? "bg-[#FFCD00] border-amber-300 text-black font-bold shadow-xs scale-[1.02]" 
-                          : "bg-[#FFFDF3] hover:bg-[#FFFBF0] border-amber-100 hover:border-amber-200 text-neutral-700"
-                      }`}
-                    >
-                      {flv}
-                    </button>
-                  );
-                })}
+            {flavors.length > 1 && (
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-neutral-900 block font-sans tracking-wide">Flavour Options</span>
+                <div className="flex gap-2 flex-wrap">
+                  {flavors.map((flv) => {
+                    const isSelected = selectedFlavor === flv;
+                    return (
+                      <button
+                        key={flv}
+                        type="button"
+                        onClick={() => setSelectedFlavor(flv)}
+                        className={`cursor-pointer px-4 py-2 text-xs font-semibold font-sans rounded-lg border transition-all ${
+                          isSelected 
+                            ? "bg-[#FFCD00] border-amber-300 text-black font-bold shadow-xs scale-[1.02]" 
+                            : "bg-[#FFFDF3] hover:bg-[#FFFBF0] border-amber-100 hover:border-amber-200 text-neutral-700"
+                        }`}
+                      >
+                        {flv}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* STAGED QUANTITY DISPLAY (SECURE CLIENT QUOTA) */}
             <div className="space-y-4 bg-white p-4 border border-neutral-200 rounded-none">
@@ -1152,296 +1303,124 @@ export default function ProductDetailModal({
                       </div>
                     )}
 
-                    {/* Interactive Form to Submit review */}
-                    <div className="bg-white p-4.5 rounded-xl border border-neutral-250 space-y-4 text-left shadow-xs">
-                      <span className="text-xs font-bold text-neutral-900 block font-sans tracking-wide border-b border-neutral-200 pb-2 uppercase text-xs">
-                        Write a Customer Product Review
-                      </span>
-
-                      <form onSubmit={handleSubmitReview} className="space-y-3.5">
-                        {/* Rating select stars decoration */}
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-mono font-bold text-neutral-500 block">Give rating star (1-5 stars) *</label>
-                          <div className="flex gap-1.5 text-neutral-300">
-                            {[1, 2, 3, 4, 5].map((starNum) => (
-                              <button
-                                key={starNum}
-                                type="button"
-                                onClick={() => setNewReviewRating(starNum)}
-                                className="cursor-pointer transition-transform hover:scale-110"
-                                title={`Give ${starNum} Stars`}
-                              >
-                                <Star className={`w-6 h-6 ${starNum <= newReviewRating ? "fill-[#FFCD00] text-[#FFCD00]" : "text-neutral-300"}`} />
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Nickname input */}
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-mono font-bold text-text-gray-500 block">Your Name / Nickname *</label>
-                          <input 
-                            type="text" 
-                            required
-                            placeholder="e.g. Sujan M." 
-                            value={newReviewName}
-                            onChange={(e) => setNewReviewName(e.target.value)}
-                            className="bg-[#FAFAFA] w-full p-2.5 border border-neutral-300 rounded-lg text-xs focus:outline-none focus:border-black font-sans text-neutral-900"
-                          />
-                        </div>
-
-                        {/* Comment text area */}
-                        <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-mono font-bold text-text-gray-500 block">Written supplement feedback *</label>
-                          <textarea 
-                            rows={3} 
-                            required
-                            placeholder="Mix mixes beautifully, fast verification results, workouts enhancement, no fishy reflux etc." 
-                            value={newReviewComment}
-                            onChange={(e) => setNewReviewComment(e.target.value)}
-                            className="bg-[#FAFAFA] w-full p-2.5 border border-neutral-300 rounded-lg text-xs focus:outline-none focus:border-black font-sans text-neutral-900"
-                          />
-                        </div>
-
-                        {/* Image & Video file select uploaders */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 pt-1">
-                          {/* Image file select uploader */}
-                          <div className="space-y-1">
-                            <label className="text-[10px] uppercase font-mono font-bold text-neutral-500 block">Supplement Snapshots</label>
-                            <div 
-                              className="border-2 border-dashed border-neutral-300 hover:border-black bg-[#FAFAFA] hover:bg-neutral-50 p-4 rounded-lg text-center cursor-pointer transition-colors h-24 flex flex-col justify-center"
-                              onClick={() => document.getElementById("review-photo-uploads")?.click()}
+                    {/* HORIZONTAL SLIDING REVIEW CAROUSEL */}
+                    <div className="space-y-3 relative">
+                      <div className="flex justify-between items-center border-b border-neutral-200 pb-2">
+                        <span className="text-xs font-bold text-neutral-900 font-sans tracking-wide uppercase">
+                          Customer Opinions ({numReviews})
+                        </span>
+                        
+                        {/* Slide Buttons for Desktop */}
+                        {reviewsList.length > 1 && (
+                          <div className="hidden sm:flex gap-1.5">
+                            <button
+                              type="button"
+                              onClick={scrollLeft}
+                              className="p-1.5 rounded-full border border-neutral-300 hover:border-black text-neutral-600 hover:text-black transition-all bg-white cursor-pointer"
+                              aria-label="Previous reviews"
                             >
-                              <span className="text-[11px] text-neutral-500 block font-medium leading-tight">
-                                <span className="text-black font-bold underline">Add photos</span>
-                              </span>
-                              <span className="text-[9px] text-gray-400 font-mono block mt-1">PNG, JPG formats</span>
-                              <input 
-                                id="review-photo-uploads"
-                                type="file" 
-                                multiple 
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={handleFileChange}
-                              />
-                            </div>
-
-                            {/* Preview selected review images waiting to upload */}
-                            {newReviewImages.length > 0 && (
-                              <div className="flex gap-1.5 flex-wrap pt-2">
-                                {newReviewImages.map((b64, idx) => (
-                                  <div key={idx} className="w-10 h-10 rounded-lg border border-neutral-250 overflow-hidden relative group aspect-square">
-                                    <img src={b64} alt="upload preview" className="w-full h-full object-cover" />
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveSelectedImage(idx)}
-                                      className="absolute inset-0 bg-red-600/90 text-white text-[8px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Video file select uploader */}
-                          <div className="space-y-1">
-                            <label className="text-[10px] uppercase font-mono font-bold text-neutral-500 block">Supplement Videos</label>
-                            <div 
-                              className="border-2 border-dashed border-neutral-300 hover:border-black bg-[#FAFAFA] hover:bg-neutral-50 p-4 rounded-lg text-center cursor-pointer transition-colors h-24 flex flex-col justify-center"
-                              onClick={() => document.getElementById("review-video-uploads")?.click()}
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={scrollRight}
+                              className="p-1.5 rounded-full border border-neutral-300 hover:border-black text-neutral-600 hover:text-black transition-all bg-white cursor-pointer"
+                              aria-label="Next reviews"
                             >
-                              <span className="text-[11px] text-neutral-500 block font-medium leading-tight">
-                                <span className="text-black font-bold underline">Add videos</span>
-                              </span>
-                              <span className="text-[9px] text-gray-400 font-mono block mt-1">MP4, MOV formats</span>
-                              <input 
-                                id="review-video-uploads"
-                                type="file" 
-                                multiple 
-                                accept="video/*" 
-                                className="hidden" 
-                                onChange={handleVideoFileChange}
-                              />
-                            </div>
-
-                            {/* Preview selected review videos waiting to upload */}
-                            {newReviewVideos.length > 0 && (
-                              <div className="flex gap-1.5 flex-wrap pt-2">
-                                {newReviewVideos.map((b64, idx) => (
-                                  <div key={idx} className="w-10 h-10 rounded-lg border border-neutral-250 overflow-hidden relative group aspect-square flex items-center justify-center bg-black">
-                                    <video src={b64} className="w-full h-full object-cover pointer-events-none" />
-                                    <div className="absolute inset-0 flex items-center justify-center text-white text-[8px] font-bold bg-black/40">🎬</div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveSelectedVideo(idx)}
-                                      className="absolute inset-0 bg-red-650/90 text-white text-[8px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
                           </div>
-                        </div>
-
-                        {/* Submit button */}
-                        <button
-                          type="submit"
-                          className="w-full py-2.5 bg-black hover:bg-neutral-800 text-white font-bold uppercase font-mono text-[10px] tracking-wider transition-colors shadow-sm rounded-lg"
-                        >
-                          Submit Supplemental Review
-                        </button>
-                      </form>
-                    </div>
-
-                    {/* Customer reviews listing */}
-                    <div className="space-y-3.5">
-                      <span className="text-xs font-bold text-neutral-900 block font-sans tracking-wide uppercase border-b border-neutral-250 pb-2">
-                        Customer Opinions ({numReviews})
-                      </span>
+                        )}
+                      </div>
 
                       {reviewsList.length === 0 ? (
-                        <p className="text-xs text-neutral-400 italic">No reviews yet. Write a review to build this batch's metrics!</p>
+                        <p className="text-xs text-neutral-400 italic py-4">No reviews yet. Write a review to build this batch's metrics!</p>
                       ) : (
-                        <div className="space-y-4">
-                          {reviewsList.map((rev) => {
-                            const isEditing = editingReviewId === rev.id;
+                        <div className="relative group">
+                          {/* Left fade shadow (only on desktop) */}
+                          <div className="hidden md:block absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#FAF9F6] to-transparent z-10 pointer-events-none" />
+                          {/* Right fade shadow (only on desktop) */}
+                          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#FAF9F6] to-transparent z-10 pointer-events-none" />
 
-                            return (
-                              <div key={rev.id} className="bg-neutral-50/50 p-4 rounded-xl border border-neutral-200 space-y-2 flex flex-col justify-between shadow-xs">
-                                <div>
-                                  <div className="flex justify-between items-start gap-3">
+                          <div 
+                            ref={carouselRef}
+                            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none py-1.5 px-0.5"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                          >
+                            {reviewsList.map((rev) => (
+                              <div 
+                                key={rev.id} 
+                                className="w-[85vw] sm:w-[320px] shrink-0 snap-start bg-white p-5 rounded-xl border border-neutral-200 shadow-xs flex flex-col justify-between hover:border-neutral-350 transition-colors"
+                              >
+                                <div className="space-y-2">
+                                  {/* Author Name and Date */}
+                                  <div className="flex justify-between items-start gap-2">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       <span className="font-semibold text-gray-900 text-xs font-sans">
                                         {rev.name}
                                       </span>
                                       {rev.verified && (
-                                        <span className="bg-emerald-100 text-emerald-800 text-[8px] font-bold px-1.5 py-0.5 rounded font-mono uppercase tracking-wider">
-                                          Verified Purchase
+                                        <span className="bg-emerald-100 text-emerald-800 text-[8px] font-bold px-1.5 py-0.5 rounded font-mono uppercase tracking-wider shrink-0">
+                                          Verified
                                         </span>
                                       )}
                                     </div>
-                                    
-                                    {/* Action buttons (inline editing or deleting reviews) */}
-                                    <div className="flex items-center gap-2">
-                                      {isEditing ? (
-                                        <div className="flex gap-2">
-                                          <button 
-                                            type="button"
-                                            onClick={() => handleSaveEdit(rev.id)}
-                                            className="text-[9px] uppercase font-mono tracking-wider font-extrabold text-emerald-600 hover:underline cursor-pointer"
-                                          >
-                                            Save
-                                          </button>
-                                          <button 
-                                            type="button"
-                                            onClick={() => setEditingReviewId(null)}
-                                            className="text-[9px] uppercase font-mono tracking-wider font-extrabold text-red-600 hover:underline cursor-pointer"
-                                          >
-                                            Cancel
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <div className="flex gap-2.5">
-                                          <button 
-                                            type="button"
-                                            onClick={() => {
-                                              setEditingReviewId(rev.id);
-                                              setEditingComment(rev.comment);
-                                              setEditingRating(rev.rating);
-                                            }}
-                                            className="text-[10px] font-bold font-sans tracking-wide text-neutral-450 hover:text-black cursor-pointer"
-                                          >
-                                            Edit
-                                          </button>
-                                          <button 
-                                            type="button"
-                                            onClick={() => handleDeleteReview(rev.id)}
-                                            className="text-[10px] font-bold font-sans tracking-wide text-neutral-450 hover:text-red-600 cursor-pointer"
-                                          >
-                                            Delete
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
+                                    <span className="text-[9px] text-neutral-400 font-mono shrink-0">
+                                      {rev.date || "Just now"}
+                                    </span>
                                   </div>
 
-                                  {/* Star row display */}
-                                  {isEditing ? (
-                                    <div className="flex gap-1 py-1">
-                                      {[1, 2, 3, 4, 5].map((sn) => (
-                                        <button 
-                                          key={sn} 
-                                          onClick={() => setEditingRating(sn)}
-                                          type="button" 
-                                          className="text-neutral-350 hover:scale-105 transition-transform"
-                                        >
-                                          <Star className={`w-4.5 h-4.5 ${sn <= editingRating ? "fill-[#FFCD00] text-[#FFCD00]" : "text-neutral-300"}`} />
-                                        </button>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <div className="flex text-[#FFCD00] py-0.5">
-                                      {[...Array(5)].map((_, sIdx) => {
-                                        const filled = sIdx < rev.rating;
-                                        return (
-                                          <Star key={sIdx} className={`w-3.5 h-3.5 ${filled ? "fill-current" : "text-neutral-300"}`} />
-                                        );
-                                      })}
-                                    </div>
-                                  )}
+                                  {/* Star Rating Row */}
+                                  <div className="flex text-[#FFCD00]">
+                                    {Array.from({ length: 5 }).map((_, sIdx) => {
+                                      const filled = sIdx < rev.rating;
+                                      return (
+                                        <Star key={sIdx} className={`w-3.5 h-3.5 ${filled ? "fill-current" : "text-neutral-200"}`} />
+                                      );
+                                    })}
+                                  </div>
 
-                                  {/* Comment rendering */}
-                                  {isEditing ? (
-                                    <textarea 
-                                      value={editingComment}
-                                      onChange={(e) => setEditingComment(e.target.value)}
-                                      rows={2}
-                                      required
-                                      className="w-full text-xs font-sans p-2 border border-neutral-300 bg-white rounded-lg mt-1 focus:outline-none focus:border-black text-neutral-900"
-                                    />
-                                  ) : (
-                                    <p className="text-neutral-700 text-xs mt-1 font-sans italic">
-                                      "{rev.comment}"
-                                    </p>
-                                  )}
+                                  {/* Review text */}
+                                  <p className="text-neutral-750 text-xs leading-relaxed font-sans italic">
+                                    "{rev.comment}"
+                                  </p>
                                 </div>
 
-                                {/* Review attachments gallery (images & videos) */}
-                                {!isEditing && (
-                                  <div className="flex gap-2 flex-wrap pt-1.5">
-                                    {/* Images */}
-                                    {rev.images && rev.images.map((snap, idx) => (
-                                      <div key={`img-${idx}`} className="relative w-12 h-12 rounded-lg border border-neutral-150 overflow-hidden cursor-pointer hover:opacity-85 transition-opacity" onClick={() => setPreviewImageUrl(snap)}>
+                                {/* Attachments (images) if any */}
+                                {rev.images && rev.images.length > 0 && (
+                                  <div className="flex gap-1.5 mt-3 flex-wrap">
+                                    {rev.images.map((snap, idx) => (
+                                      <div 
+                                        key={`img-${idx}`} 
+                                        className="relative w-10 h-10 rounded-lg border border-neutral-150 overflow-hidden cursor-pointer hover:opacity-85 transition-opacity" 
+                                        onClick={() => setPreviewImageUrl(snap)}
+                                      >
                                         <img 
                                           src={snap} 
-                                          alt="review snap" 
+                                          alt="Review attachment" 
                                           className="w-full h-full object-cover" 
-                                          referrerPolicy="no-referrer"
+                                          referrerPolicy="no-referrer" 
                                         />
-                                      </div>
-                                    ))}
-                                    {/* Videos */}
-                                    {rev.videos && rev.videos.map((vid, idx) => (
-                                      <div key={`vid-${idx}`} className="relative w-12 h-12 rounded-lg border border-neutral-150 overflow-hidden bg-black cursor-pointer hover:opacity-85 transition-opacity flex items-center justify-center" onClick={() => setPreviewImageUrl(vid)}>
-                                        <video src={vid} className="w-full h-full object-cover pointer-events-none" />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white font-bold text-[10px]">▶</div>
                                       </div>
                                     ))}
                                   </div>
                                 )}
-
-                                <span className="text-[9px] font-mono font-bold text-neutral-400 self-end block mt-1 text-right">
-                                  {rev.date}
-                                </span>
                               </div>
-                            );
-                          })}
+                            ))}
+                          </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* CENTERED "LEAVE A REVIEW" ACTION BUTTON */}
+                    <div className="flex justify-center pt-4 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsLeaveReviewOpen(true)}
+                        className="cursor-pointer bg-neutral-900 hover:bg-neutral-850 active:scale-95 text-white text-[11px] font-bold font-sans tracking-wider uppercase px-8 py-3 rounded-xl transition-all shadow-sm"
+                      >
+                        Leave a Review
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1535,6 +1514,112 @@ export default function ProductDetailModal({
                 referrerPolicy="no-referrer"
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* LEAVE A REVIEW MODAL OVERLAY */}
+      {isLeaveReviewOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[70] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#FAF9F6] w-full max-w-md rounded-2xl border border-neutral-200 p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-200 text-left">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setIsLeaveReviewOpen(false)}
+              className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer"
+              aria-label="Close form"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <form onSubmit={handleSubmitReview} className="space-y-4 pt-2">
+              <div className="text-center">
+                <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#8B6E02] font-bold block mb-1">
+                  Verified Supplement Feedback
+                </span>
+                <h3 className="text-lg font-serif font-black text-[#1A1A1A] tracking-tight">
+                  Leave your review
+                </h3>
+                <p className="text-xs text-neutral-500 max-w-sm mx-auto mt-1">
+                  Share your genuine supplement and workout experience with the FitYatra community.
+                </p>
+              </div>
+
+              {/* Rating selection (1-5 stars) */}
+              <div className="space-y-1.5 flex flex-col items-center">
+                <label className="text-xs font-bold text-neutral-800 uppercase tracking-widest font-sans">
+                  Product Experience
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      type="button"
+                      key={star}
+                      onClick={() => setNewReviewRating(star)}
+                      className="p-1 cursor-pointer hover:scale-110 transition-transform"
+                    >
+                      <Star 
+                        className={`w-7 h-7 transition-all ${
+                          star <= newReviewRating 
+                            ? "fill-[#E2B600] text-[#E2B600]" 
+                            : "text-neutral-300"
+                        }`} 
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Name */}
+              <div className="space-y-1">
+                <label htmlFor="modal-reviewer-name" className="text-xs font-bold text-neutral-700 block uppercase tracking-wide">
+                  Your Name / Nickname *
+                </label>
+                <input
+                  type="text"
+                  id="modal-reviewer-name"
+                  required
+                  maxLength={35}
+                  placeholder="e.g. Sujan M."
+                  value={newReviewName}
+                  onChange={(e) => setNewReviewName(e.target.value)}
+                  className="w-full text-xs px-4 py-2.5 rounded-lg border border-neutral-300 bg-white focus:outline-none focus:border-black font-sans text-neutral-900 animate-none"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
+              </div>
+
+              {/* Comment / Review text */}
+              <div className="space-y-1">
+                <label htmlFor="modal-reviewer-comment" className="text-xs font-bold text-neutral-700 block uppercase tracking-wide">
+                  Your Review *
+                </label>
+                <textarea
+                  id="modal-reviewer-comment"
+                  required
+                  rows={3}
+                  maxLength={200}
+                  placeholder="Tell us about mixability, taste, or physical recovery changes..."
+                  value={newReviewComment}
+                  onChange={(e) => setNewReviewComment(e.target.value)}
+                  className="w-full text-xs px-4 py-2.5 rounded-lg border border-neutral-300 bg-white focus:outline-none focus:border-black font-sans text-neutral-900 resize-none animate-none"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                ></textarea>
+              </div>
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                className="cursor-pointer w-full bg-neutral-950 hover:bg-neutral-900 text-white font-sans text-xs font-black tracking-widest uppercase py-3 rounded-xl transition-all shadow-md active:scale-95"
+              >
+                Submit Review
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -44,7 +44,49 @@ export const PRODUCTS: Product[] = [
       "Protein": "0 g",
       "Fats": "0 g",
       "Carbohydrates": "0 g"
-    }
+    },
+    variants: [
+      {
+        name: "Tropical Tango 307g",
+        price: 2199,
+        originalPrice: 3199,
+        servings: "83 Servings",
+        servingSize: "3.7g",
+        isSoldOut: false
+      },
+      {
+        name: "Watermelon Wave 307g",
+        price: 2199,
+        originalPrice: 3199,
+        servings: "83 Servings",
+        servingSize: "3.7g",
+        isSoldOut: false
+      },
+      {
+        name: "Unflavored 250g",
+        price: 1899,
+        originalPrice: 2799,
+        servings: "83 Servings",
+        servingSize: "3g",
+        isSoldOut: true
+      },
+      {
+        name: "Kiwi Kick 307g",
+        price: 2199,
+        originalPrice: 3199,
+        servings: "83 Servings",
+        servingSize: "3.7g",
+        isSoldOut: true
+      },
+      {
+        name: "Fruit Fusion 307g",
+        price: 2199,
+        originalPrice: 3199,
+        servings: "83 Servings",
+        servingSize: "3.7g",
+        isSoldOut: true
+      }
+    ]
   },
   {
     id: "muscleblaze-lcarnitine",
@@ -56,7 +98,7 @@ export const PRODUCTS: Product[] = [
     discountPercentage: 32,
     rating: 4.8,
     reviewCount: 22,
-    isSoldOut: true,
+    isSoldOut: false,
     image: "https://i.ibb.co/cSgpP79g/Orange-x2-824459d1-3442-46cc-bf0e-df457bb1c82d.jpg",
     gallery: [
       "https://i.ibb.co/cSgpP79g/Orange-x2-824459d1-3442-46cc-bf0e-df457bb1c82d.jpg",
@@ -85,7 +127,25 @@ export const PRODUCTS: Product[] = [
       "L-Carnitine": "3000 mg",
       "Calories": "0 kcal",
       "Sugar": "0 g"
-    }
+    },
+    variants: [
+      {
+        name: "Lime",
+        price: 1299,
+        originalPrice: 1899,
+        servings: "30 Servings",
+        servingSize: "15ml",
+        isSoldOut: false
+      },
+      {
+        name: "Orange",
+        price: 1299,
+        originalPrice: 1899,
+        servings: "30 Servings",
+        servingSize: "15ml",
+        isSoldOut: false
+      }
+    ]
   },
   {
     id: "myfitness-pb",
@@ -97,7 +157,7 @@ export const PRODUCTS: Product[] = [
     discountPercentage: 33,
     rating: 4.8,
     reviewCount: 124,
-    isSoldOut: false,
+    isSoldOut: true,
     image: "https://i.ibb.co/CTrN2Bq/02-JPG-1.jpg",
     gallery: [
       "https://i.ibb.co/CTrN2Bq/02-JPG-1.jpg",
@@ -131,7 +191,25 @@ export const PRODUCTS: Product[] = [
       "Healthy Fats": "16 g",
       "Dietary Fiber": "3 g",
       "Added Sugar": "1.5 g"
-    }
+    },
+    variants: [
+      {
+        name: "1.25 kg Jar",
+        price: 599,
+        originalPrice: 899,
+        servings: "39 Servings",
+        servingSize: "32g",
+        isSoldOut: true
+      },
+      {
+        name: "510g Jar",
+        price: 349,
+        originalPrice: 499,
+        servings: "16 Servings",
+        servingSize: "32g",
+        isSoldOut: true
+      }
+    ]
   },
   {
     id: "muscleblaze-fishoil",

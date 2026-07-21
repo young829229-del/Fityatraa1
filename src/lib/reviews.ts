@@ -86,6 +86,26 @@ export const INITIAL_REVIEWS: UserReview[] = [
     verified: true
   },
   {
+    id: "rev-fo-3",
+    productId: "muscleblaze-fishoil",
+    name: "Srijana K. (Teacher)",
+    rating: 5,
+    comment: "don't go gym but bought this for brain health. I'm teacher, work ma focus chahincha. 20 days use garepaxi noticed concentration ramro bhayo. Students le pani 'madam you seem more energetic' bhancha. Brain fog kam bhayo. Very happy!",
+    images: [],
+    date: "20 days ago",
+    verified: true
+  },
+  {
+    id: "rev-fo-4",
+    productId: "muscleblaze-fishoil",
+    name: "Subash Shrestha",
+    rating: 4,
+    comment: "Office work ma whole day computer herdai baschu. Eye strain ekdum hunthyo. 2 hapta dekhi lirachu yo fish oil. Eyes ali better feel gareko chu. Too early to say full result but positive feel cha.",
+    images: [],
+    date: "2 weeks ago",
+    verified: true
+  },
+  {
     id: "rev-hc-1",
     productId: "hkvitals-collagen",
     name: "Sujita B.",
