@@ -114,10 +114,13 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/WN0Lc4nZ/Back-Side.jpg"
     ],
     infoImages: [
-      "https://i.ibb.co/P8Gq2nH/LC-Timeline-3-3-1.jpg",
-      "https://i.ibb.co/YFf6ZfjJ/Info-Graphics-11-11-1.jpg",
-      "https://i.ibb.co/vx43CzM0/Simplfieied-10-12-1.jpg",
-      "https://i.ibb.co/ccYZRfRX/Best-Friend-7-23-1.jpg"
+      "https://i.ibb.co/qzYXKQm/DK-13-1-3.jpg",
+      "https://i.ibb.co/gFh8YWQ1/What-LCdoes-1.jpg",
+      "https://i.ibb.co/81nnP6g/Best-Friend-7-23-1-1.jpg",
+      "https://i.ibb.co/6RHqqFSk/Universal-Upscaler-Pro-Precise-2-1f178860-0287-6c00-843d-c37f84ab3cf0-1.jpg",
+      "https://i.ibb.co/pryqhgG3/Upscaled-1.jpg",
+      "https://i.ibb.co/QvpPY83H/Gemini-Generated-Image-65yym165yym165yy.png",
+      "https://i.ibb.co/5gTWx350/gpt-image-2-Create-a-comparison-chart-image-titled-WHY-FITYATRA-Style-Clean-minimalist-prof-0-1.jpg"
     ],
     description: "Convert fat to fuel with Liquid L-Carnitine. Formulated for maximum nutrient absorption to accelerate metabolism, improve athletic performance, and support weight management.",
     servings: "30 Servings",
@@ -236,13 +239,11 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/cSF14TTV/5.jpg"
     ],
     infoImages: [
-      "https://i.ibb.co/rg2TYr5/DK-13-1-3.jpg",
-      "https://i.ibb.co/p65Yp0b8/Fish-Oil-Problem-17-1-1-a2ea86dc-c8c6-4577-9dc1-9f2ab2ccaf1a.jpg",
-      "https://i.ibb.co/hxJDMgNq/Still-2026-07-05-164638-30-1-2.jpg",
-      "https://i.ibb.co/hRfz8T2H/gemini-2-5-flash-image-top-down-macro-photo-open-human-palm-holding-a-black-plastic-bottle-cap-golde.jpg",
-      "https://i.ibb.co/JRTjRqg0/product-usage-sequence-1f17770f-96d5-6310-a015-e7efdc81c1d4-0-0.jpg",
-      "https://i.ibb.co/wFyNrqKk/gpt-image-2-Create-a-comparison-chart-image-titled-WHY-FITYATRA-Style-Clean-minimalist-prof-0-1.jpg",
-      "https://i.ibb.co/d0Mftd0k/Fish-Oil-Timeline-17-6-1.jpg"
+      "https://i.ibb.co/qzYXKQm/DK-13-1-3.jpg",
+      "https://i.ibb.co/gFh8YWQ1/What-LCdoes-1.jpg",
+      "https://i.ibb.co/81nnP6g/Best-Friend-7-23-1-1.jpg",
+      "https://i.ibb.co/6RHqqFSk/Universal-Upscaler-Pro-Precise-2-1f178860-0287-6c00-843d-c37f84ab3cf0-1.jpg",
+      "https://i.ibb.co/pryqhgG3/Upscaled-1.jpg"
     ],
     description: "Triple potency Omega-3 fatty acids. MuscleBlaze Fish Oil Gold provides 1250mg of molecularly distilled premium fish oil, supplying 540mg of EPA and 360mg of DHA. It supports cartilage hydration, joint fluid dynamics, brain function, and skin tone. Features advanced enteric coating to prevent digestive reflux and fishy aftertaste.",
     servings: "60 Capsules",
