@@ -20,35 +20,6 @@ function initializeDatabase() {
   }
   if (!fs.existsSync(PRODUCTS_FILE)) {
     fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(PRODUCTS, null, 2), "utf-8");
-  } else {
-    // Sync default products properties with src/data.ts
-    try {
-      const raw = fs.readFileSync(PRODUCTS_FILE, "utf-8");
-      const currentProducts = JSON.parse(raw);
-      let updated = false;
-      const currentProductsUpdated = currentProducts.map((p: any) => {
-        const defaultProduct = PRODUCTS.find((dp: any) => dp.id === p.id);
-        if (defaultProduct) {
-          let productFieldsUpdated = false;
-          for (const key of Object.keys(defaultProduct)) {
-            if (JSON.stringify(p[key]) !== JSON.stringify((defaultProduct as any)[key])) {
-              p[key] = (defaultProduct as any)[key];
-              productFieldsUpdated = true;
-            }
-          }
-          if (productFieldsUpdated) {
-            updated = true;
-          }
-        }
-        return p;
-      });
-      if (updated) {
-        console.log("Synchronized default products properties with src/data.ts inside products.json");
-        fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(currentProductsUpdated, null, 2), "utf-8");
-      }
-    } catch (err) {
-      console.error("Failed to parse or synchronize products.json database with src/data.ts", err);
-    }
   }
   if (!fs.existsSync(REVIEWS_FILE)) {
     fs.writeFileSync(REVIEWS_FILE, JSON.stringify(INITIAL_REVIEWS, null, 2), "utf-8");
@@ -67,6 +38,9 @@ async function startServer() {
   // API Endpoints for Secure settings, products and reviews
   app.get("/api/settings", (req, res) => {
     try {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
       const raw = fs.readFileSync(SETTINGS_FILE, "utf-8");
       res.json(JSON.parse(raw));
     } catch (e) {
@@ -85,6 +59,9 @@ async function startServer() {
 
   app.get("/api/products", (req, res) => {
     try {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
       const raw = fs.readFileSync(PRODUCTS_FILE, "utf-8");
       res.json(JSON.parse(raw));
     } catch (e) {
@@ -103,6 +80,9 @@ async function startServer() {
 
   app.get("/api/reviews", (req, res) => {
     try {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
       const raw = fs.readFileSync(REVIEWS_FILE, "utf-8");
       res.json(JSON.parse(raw));
     } catch (e) {

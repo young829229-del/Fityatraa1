@@ -30,7 +30,12 @@ export default function App() {
   useEffect(() => {
     const synchronizeWithServer = async () => {
       try {
-        const settingsRes = await fetch("/api/settings");
+        const settingsRes = await fetch(`/api/settings?t=${Date.now()}`, {
+          headers: {
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+          }
+        });
         if (settingsRes.ok) {
           const settingsData = await settingsRes.json();
           localStorage.setItem("fityatra_payment_settings", JSON.stringify(settingsData));
@@ -41,7 +46,12 @@ export default function App() {
       }
 
       try {
-        const productsRes = await fetch("/api/products");
+        const productsRes = await fetch(`/api/products?t=${Date.now()}`, {
+          headers: {
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+          }
+        });
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           saveProductsFromServer(productsData);
@@ -51,7 +61,12 @@ export default function App() {
       }
 
       try {
-        const reviewsRes = await fetch("/api/reviews");
+        const reviewsRes = await fetch(`/api/reviews?t=${Date.now()}`, {
+          headers: {
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+          }
+        });
         if (reviewsRes.ok) {
           const reviewsData = await reviewsRes.json();
           localStorage.setItem("fityatra_product_reviews", JSON.stringify(reviewsData));

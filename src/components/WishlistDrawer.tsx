@@ -83,7 +83,7 @@ export default function WishlistDrawer({
                       }}
                       className="w-20 h-20 bg-neutral-50 rounded-none border border-neutral-100 flex items-center justify-center p-2 shrink-0 cursor-pointer overflow-hidden relative"
                     >
-                      {prod.image.startsWith("http") ? (
+                      {prod.image.startsWith("http") || prod.image.startsWith("data:image/") ? (
                         <img
                           src={prod.image}
                           alt={prod.name}

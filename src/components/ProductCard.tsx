@@ -23,7 +23,7 @@ export default function ProductCard({
 
   // Custom CSS renderers for the products to create stunning high-fidelity supplement tins
   const renderProductBottle = () => {
-    if (product.image.startsWith("http")) {
+    if (product.image.startsWith("http") || product.image.startsWith("data:image/")) {
       return (
         <div className="w-full aspect-square bg-[#FDFDFD] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden transition-all duration-300 select-none">
           <img

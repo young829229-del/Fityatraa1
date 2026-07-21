@@ -301,7 +301,7 @@ Sent via FitYatra Applet Dispatcher`;
                         id={`cart-item-img-container-${item.product.id}`}
                         className="w-16 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-[#1A1A1A]/10 p-1 overflow-hidden"
                       >
-                        {item.product.image && item.product.image.startsWith("http") ? (
+                        {item.product.image && (item.product.image.startsWith("http") || item.product.image.startsWith("data:image/")) ? (
                           <img 
                             id={`cart-item-img-${item.product.id}`}
                             src={item.product.image} 

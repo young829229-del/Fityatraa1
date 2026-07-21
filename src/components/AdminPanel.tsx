@@ -359,6 +359,19 @@ export default function AdminPanel() {
     setPaymentSettings(loadPaymentSettings());
   }, []);
 
+  // Sync editing product image states
+  useEffect(() => {
+    if (editingProduct) {
+      setEditMainImage(editingProduct.image || "");
+      setEditGallery(editingProduct.gallery || []);
+      setEditInfoImages(editingProduct.infoImages || []);
+    } else {
+      setEditMainImage("");
+      setEditGallery([]);
+      setEditInfoImages([]);
+    }
+  }, [editingProduct]);
+
   const loadOrdersFromStorage = () => {
     // Collect from local storage first
     let localOrders: Order[] = [];
@@ -546,6 +559,9 @@ export default function AdminPanel() {
     };
     addProductToLib(newProduct);
     setProducts(loadAllProducts());
+    setAddMainImage("");
+    setAddGallery([]);
+    setAddInfoImages([]);
     setShowAddProductForm(false);
   };
 

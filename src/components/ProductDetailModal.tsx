@@ -390,9 +390,13 @@ export default function ProductDetailModal({
               title="Swipe left/right on mobile"
             >
               <img 
-                src={album[activeImageIndex] && album[activeImageIndex].startsWith("http") ? album[activeImageIndex] : product.image} 
+                src={album[activeImageIndex] && (album[activeImageIndex].startsWith("http") || album[activeImageIndex].startsWith("data:image")) ? album[activeImageIndex] : product.image} 
                 alt={`${product.brand} ${product.name}`} 
                 className="max-w-full max-h-full object-contain" 
+                onError={(e) => {
+                  console.error(`Failed to load product detail image: ${e.currentTarget.src}`);
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400";
+                }}
               />
               
               {/* Manual image slider navigators */}
@@ -887,9 +891,14 @@ export default function ProductDetailModal({
 
                     {/* Rich infographics & scientific info-banners flow */}
                     {(() => {
-                      const displayImages = [...(product.infoImages || [])];
+                      const displayImages = [...(product.infoImages || [])]
+                        .map(img => typeof img === "string" ? img.trim() : "")
+                        .filter(img => img.length > 0 && (img.startsWith("http") || img.startsWith("data:image")));
+                      
                       if (displayImages.length <= 1) {
-                        const galleryItems = product.gallery || [];
+                        const galleryItems = (product.gallery || [])
+                          .map(img => typeof img === "string" ? img.trim() : "")
+                          .filter(img => img.length > 0 && (img.startsWith("http") || img.startsWith("data:image")));
                         galleryItems.forEach(img => {
                           if (!displayImages.includes(img)) {
                             displayImages.push(img);
@@ -1400,6 +1409,10 @@ export default function ProductDetailModal({
                                           alt="Review attachment" 
                                           className="w-full h-full object-cover" 
                                           referrerPolicy="no-referrer" 
+                                          onError={(e) => {
+                                            console.error(`Failed to load review attachment: ${e.currentTarget.src}`);
+                                            e.currentTarget.style.display = "none";
+                                          }}
                                         />
                                       </div>
                                     ))}
