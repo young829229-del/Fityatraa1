@@ -7,7 +7,13 @@ let inMemoryProducts: Product[] | null = null;
 
 export function loadAllProducts(): Product[] {
   if (inMemoryProducts) {
-    return inMemoryProducts;
+    const fishoil = inMemoryProducts.find(p => p.id === "muscleblaze-fishoil");
+    const lcarnitine = inMemoryProducts.find(p => p.id === "muscleblaze-lcarnitine");
+    if (!fishoil || fishoil.category === "Creatine" || !lcarnitine || lcarnitine.category === "Creatine") {
+      inMemoryProducts = null;
+    } else {
+      return inMemoryProducts;
+    }
   }
   try {
     const data = localStorage.getItem(PRODUCTS_LOCAL_STORAGE_KEY);
@@ -16,7 +22,30 @@ export function loadAllProducts(): Product[] {
       inMemoryProducts = INITIAL_PRODUCTS as Product[];
       return inMemoryProducts;
     }
-    inMemoryProducts = JSON.parse(data);
+    let parsed: Product[] = JSON.parse(data);
+    
+    // Auto-heal default products client-side cache to match INITIAL_PRODUCTS
+    let changed = false;
+    parsed = parsed.map(p => {
+      const dp = INITIAL_PRODUCTS.find(d => d.id === p.id);
+      if (dp) {
+        let fieldChanged = false;
+        for (const key of Object.keys(dp)) {
+          if (JSON.stringify((p as any)[key]) !== JSON.stringify((dp as any)[key])) {
+            (p as any)[key] = (dp as any)[key];
+            fieldChanged = true;
+          }
+        }
+        if (fieldChanged) changed = true;
+      }
+      return p;
+    });
+
+    if (changed) {
+      localStorage.setItem(PRODUCTS_LOCAL_STORAGE_KEY, JSON.stringify(parsed));
+    }
+
+    inMemoryProducts = parsed;
     return inMemoryProducts!;
   } catch (e) {
     console.error("Failed to load products dynamically", e);

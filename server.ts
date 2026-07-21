@@ -21,7 +21,7 @@ function initializeDatabase() {
   if (!fs.existsSync(PRODUCTS_FILE)) {
     fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(PRODUCTS, null, 2), "utf-8");
   } else {
-    // Sync default products image assets with src/data.ts
+    // Sync default products properties with src/data.ts
     try {
       const raw = fs.readFileSync(PRODUCTS_FILE, "utf-8");
       const currentProducts = JSON.parse(raw);
@@ -29,23 +29,21 @@ function initializeDatabase() {
       const currentProductsUpdated = currentProducts.map((p: any) => {
         const defaultProduct = PRODUCTS.find((dp: any) => dp.id === p.id);
         if (defaultProduct) {
-          if (JSON.stringify(p.infoImages) !== JSON.stringify(defaultProduct.infoImages)) {
-            p.infoImages = defaultProduct.infoImages;
-            updated = true;
+          let productFieldsUpdated = false;
+          for (const key of Object.keys(defaultProduct)) {
+            if (JSON.stringify(p[key]) !== JSON.stringify((defaultProduct as any)[key])) {
+              p[key] = (defaultProduct as any)[key];
+              productFieldsUpdated = true;
+            }
           }
-          if (JSON.stringify(p.gallery) !== JSON.stringify(defaultProduct.gallery)) {
-            p.gallery = defaultProduct.gallery;
-            updated = true;
-          }
-          if (p.image !== defaultProduct.image) {
-            p.image = defaultProduct.image;
+          if (productFieldsUpdated) {
             updated = true;
           }
         }
         return p;
       });
       if (updated) {
-        console.log("Synchronized default products image/banner assets with src/data.ts inside products.json");
+        console.log("Synchronized default products properties with src/data.ts inside products.json");
         fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(currentProductsUpdated, null, 2), "utf-8");
       }
     } catch (err) {
