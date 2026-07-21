@@ -14,7 +14,7 @@ import PolicyModal from "./components/PolicyModal";
 
 import { PRODUCTS } from "./data";
 import { Product, CartItem } from "./types";
-import { loadAllProducts } from "./lib/products";
+import { loadAllProducts, saveProductsFromServer } from "./lib/products";
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>(() => loadAllProducts());
@@ -44,8 +44,7 @@ export default function App() {
         const productsRes = await fetch("/api/products");
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          localStorage.setItem("fityatra_dynamic_products", JSON.stringify(productsData));
-          window.dispatchEvent(new Event("fityatra_products_updated"));
+          saveProductsFromServer(productsData);
         }
       } catch (err) {
         console.warn("Could not sync products from server on boot", err);

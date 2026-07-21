@@ -23,9 +23,14 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/yF9z3S1N/wellcore-back-cover.jpg"
     ],
     infoImages: [
-      "https://i.ibb.co/NgnBfYh7/Still-2026-02-21-083921-16-6-1.jpg",
-      "https://i.ibb.co/gbkJ6Ff2/Updated-15-3-2.jpg",
-      "https://i.ibb.co/S4VXxXKk/Still-2026-02-21-083906-10-7-1.jpg"
+      "https://i.ibb.co/rg2TYr5/DK-13-1-3.jpg",
+      "https://i.ibb.co/7tTk6WL2/Still-2026-02-21-083921-16-6-1.jpg",
+      "https://i.ibb.co/9mW2J3MP/Chat-GPT-Image-Feb-18-2026-09-43-53-PM-57a28afc-21d5-4a8f-b344-d389667224ca-1.png",
+      "https://i.ibb.co/bMzwGtg5/Still-2026-02-21-083906-10-7-1.jpg",
+      "https://i.ibb.co/8gFgQtBf/gpt-image-2-a-cinematic-photo-of-Minimal-flat-infographic-card-clean-white-background-small-0.jpg",
+      "https://i.ibb.co/8DKChBLX/gpt-image-2-a-cinematic-photo-of-Minimal-flat-infographic-clean-white-background-bold-dark-h-0.jpg",
+      "https://i.ibb.co/cS7nx7xb/Updated-15-3-2.jpg",
+      "https://i.ibb.co/wFVtjxkT/lucid-origin-Ultra-realistic-top-down-flat-lay-product-photo-single-round-traditional-blue-s-0.jpg"
     ],
     description: "Unprecedented purity. Wellcore Micronised Creatine Monohydrate fuels muscle protein synthesis, enhances cellular ATP production, and amplifies raw power output during physical training. It dissolves instantly in water and is 100% unflavoured to easily stack with your favorite whey or pre-workouts.",
     servings: "100 Servings",
@@ -231,6 +236,12 @@ export const PRODUCTS: Product[] = [
       "https://i.ibb.co/cSF14TTV/5.jpg"
     ],
     infoImages: [
+      "https://i.ibb.co/rg2TYr5/DK-13-1-3.jpg",
+      "https://i.ibb.co/p65Yp0b8/Fish-Oil-Problem-17-1-1-a2ea86dc-c8c6-4577-9dc1-9f2ab2ccaf1a.jpg",
+      "https://i.ibb.co/hxJDMgNq/Still-2026-07-05-164638-30-1-2.jpg",
+      "https://i.ibb.co/hRfz8T2H/gemini-2-5-flash-image-top-down-macro-photo-open-human-palm-holding-a-black-plastic-bottle-cap-golde.jpg",
+      "https://i.ibb.co/JRTjRqg0/product-usage-sequence-1f17770f-96d5-6310-a015-e7efdc81c1d4-0-0.jpg",
+      "https://i.ibb.co/wFyNrqKk/gpt-image-2-Create-a-comparison-chart-image-titled-WHY-FITYATRA-Style-Clean-minimalist-prof-0-1.jpg",
       "https://i.ibb.co/d0Mftd0k/Fish-Oil-Timeline-17-6-1.jpg"
     ],
     description: "Triple potency Omega-3 fatty acids. MuscleBlaze Fish Oil Gold provides 1250mg of molecularly distilled premium fish oil, supplying 540mg of EPA and 360mg of DHA. It supports cartilage hydration, joint fluid dynamics, brain function, and skin tone. Features advanced enteric coating to prevent digestive reflux and fishy aftertaste.",

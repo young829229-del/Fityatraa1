@@ -1847,7 +1847,7 @@ export default function AdminPanel() {
                 const price = Number(fd.get("price"));
                 const originalPrice = Number(fd.get("originalPrice"));
                 const isSoldOut = fd.get("isSoldOut") === "true";
-                const image = addMainImage || (fd.get("image") as string).trim();
+                const image = addMainImage || (fd.get("image") as string || "").trim();
                 const description = (fd.get("description") as string).trim();
                 const servings = (fd.get("servings") as string).trim();
                 const servingSize = (fd.get("servingSize") as string).trim();
@@ -2059,7 +2059,7 @@ export default function AdminPanel() {
                 const price = Number(fd.get("price"));
                 const originalPrice = Number(fd.get("originalPrice"));
                 const isSoldOut = fd.get("isSoldOut") === "true";
-                const image = editMainImage || (fd.get("image") as string).trim();
+                const image = editMainImage || (fd.get("image") as string || "").trim();
                 const description = (fd.get("description") as string).trim();
                 const servings = (fd.get("servings") as string).trim();
                 const servingSize = (fd.get("servingSize") as string).trim();

@@ -3,14 +3,21 @@ import { PRODUCTS as INITIAL_PRODUCTS } from "../data";
 
 const PRODUCTS_LOCAL_STORAGE_KEY = "fityatra_dynamic_products";
 
+let inMemoryProducts: Product[] | null = null;
+
 export function loadAllProducts(): Product[] {
+  if (inMemoryProducts) {
+    return inMemoryProducts;
+  }
   try {
     const data = localStorage.getItem(PRODUCTS_LOCAL_STORAGE_KEY);
     if (!data) {
       localStorage.setItem(PRODUCTS_LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_PRODUCTS));
-      return INITIAL_PRODUCTS as Product[];
+      inMemoryProducts = INITIAL_PRODUCTS as Product[];
+      return inMemoryProducts;
     }
-    return JSON.parse(data);
+    inMemoryProducts = JSON.parse(data);
+    return inMemoryProducts!;
   } catch (e) {
     console.error("Failed to load products dynamically", e);
     return INITIAL_PRODUCTS as Product[];
@@ -18,8 +25,14 @@ export function loadAllProducts(): Product[] {
 }
 
 export function saveAllProducts(products: Product[]) {
+  inMemoryProducts = products;
   try {
     localStorage.setItem(PRODUCTS_LOCAL_STORAGE_KEY, JSON.stringify(products));
+  } catch (e) {
+    console.warn("Failed to save products to localStorage (possibly exceeded quota)", e);
+  }
+
+  try {
     // Trigger custom event so other components know products changed
     window.dispatchEvent(new Event("fityatra_products_updated"));
 
@@ -30,8 +43,19 @@ export function saveAllProducts(products: Product[]) {
       body: JSON.stringify(products),
     }).catch((err) => console.error("Failed to sync products to server", err));
   } catch (e) {
-    console.error("Failed to save products dynamically", e);
+    console.error("Failed to sync or dispatch products dynamically", e);
   }
+}
+
+export function saveProductsFromServer(products: Product[]): Product[] {
+  inMemoryProducts = products;
+  try {
+    localStorage.setItem(PRODUCTS_LOCAL_STORAGE_KEY, JSON.stringify(products));
+  } catch (e) {
+    console.warn("Failed to save products from server to localStorage (possibly exceeded quota)", e);
+  }
+  window.dispatchEvent(new Event("fityatra_products_updated"));
+  return products;
 }
 
 export function addProduct(product: Product): Product {
