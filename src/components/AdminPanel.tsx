@@ -5,31 +5,12 @@ import {
   Trash2, Edit, RefreshCw, X, Check, Save, User, BarChart2, PlusCircle, AlertCircle, Search,
   Upload, Image as ImageIcon
 } from "lucide-react";
-import { loadAllReviews, saveAllReviews, UserReview, deleteProductReview, updateProductReview } from "../lib/reviews";
+import { loadAllReviews, saveAllReviews, UserReview, deleteProductReview, updateProductReview, addProductReview } from "../lib/reviews";
 import { PRODUCTS } from "../data";
 import { loadAllProducts, saveAllProducts, addProduct as addProductToLib, updateProduct as updateProductInLib, deleteProduct as deleteProductFromLib } from "../lib/products";
 import { loadPaymentSettings, savePaymentSettings, PaymentSettings } from "../lib/paymentSettings";
+import { loadAllOrders, updateOrderStatus, deleteOrder as deleteOrderInLib, addOrder as addOrderInLib, Order, OrderItem } from "../lib/orders";
 import { Product } from "../types";
-
-interface OrderItem {
-  name: string;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  name: string;
-  phone: string;
-  region: string;
-  total: number;
-  items: OrderItem[];
-  status: "placed" | "processing" | "dispatched" | "transit" | "out_for_delivery" | "delivered";
-  createdAt: string;
-  shippingPartner: string;
-  notes?: string;
-  paymentMode?: string;
-  screenshot?: string;
-}
 
 const PRESEEDED_ORDERS: Order[] = [
   {
@@ -351,12 +332,29 @@ export default function AdminPanel() {
   const [newRevImages, setNewRevImages] = useState<string[]>([]);
   const [showAddReviewForm, setShowAddReviewForm] = useState(false);
 
-  // Load orders, reviews, and dynamic products
+  // Load orders, reviews, and dynamic products with real-time updates
   useEffect(() => {
-    loadOrdersFromStorage();
-    setReviews(loadAllReviews());
-    setProducts(loadAllProducts());
-    setPaymentSettings(loadPaymentSettings());
+    const handleProducts = () => setProducts(loadAllProducts());
+    const handleSettings = () => setPaymentSettings(loadPaymentSettings());
+    const handleReviews = () => setReviews(loadAllReviews());
+    const handleOrders = () => loadOrdersFromStorage();
+
+    window.addEventListener("fityatra_products_updated", handleProducts);
+    window.addEventListener("fityatra_payment_settings_updated", handleSettings);
+    window.addEventListener("fityatra_reviews_updated", handleReviews);
+    window.addEventListener("fityatra_orders_updated", handleOrders);
+
+    handleProducts();
+    handleSettings();
+    handleReviews();
+    handleOrders();
+
+    return () => {
+      window.removeEventListener("fityatra_products_updated", handleProducts);
+      window.removeEventListener("fityatra_payment_settings_updated", handleSettings);
+      window.removeEventListener("fityatra_reviews_updated", handleReviews);
+      window.removeEventListener("fityatra_orders_updated", handleOrders);
+    };
   }, []);
 
   // Sync editing product image states
@@ -373,18 +371,9 @@ export default function AdminPanel() {
   }, [editingProduct]);
 
   const loadOrdersFromStorage = () => {
-    // Collect from local storage first
-    let localOrders: Order[] = [];
-    try {
-      const stored = localStorage.getItem("fityatra_orders");
-      if (stored) {
-        localOrders = JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error("Failed to load local orders in admin board", e);
-    }
-
-    // Merge preseeded orders if not overwritten
+    let firestoreOrders = loadAllOrders();
+    
+    // Merge preseeded orders if not present
     let finalPreseeded = PRESEEDED_ORDERS;
     try {
       const override = localStorage.getItem("fityatra_preseeded_orders");
@@ -397,7 +386,15 @@ export default function AdminPanel() {
       // ignore
     }
 
-    setOrders([...finalPreseeded, ...localOrders]);
+    // Merge without duplicates by ID
+    const combined = [...firestoreOrders];
+    for (const p of finalPreseeded) {
+      if (!combined.some(o => o.id === p.id)) {
+        combined.push(p);
+      }
+    }
+
+    setOrders(combined);
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -429,10 +426,10 @@ export default function AdminPanel() {
   };
 
   // Orders operations
-  const handleUpdateOrderStatus = (orderId: string, status: Order["status"], partner: string, notes: string) => {
-    // Check if it's a preseeded order
-    const isPreseeded = PRESEEDED_ORDERS.some(o => o.id === orderId);
+  const handleUpdateOrderStatus = async (orderId: string, status: Order["status"], partner: string, notes: string) => {
+    await updateOrderStatus(orderId, status, notes);
     
+    const isPreseeded = PRESEEDED_ORDERS.some(o => o.id === orderId);
     if (isPreseeded) {
       try {
         const stored = localStorage.getItem("fityatra_preseeded_orders");
@@ -442,41 +439,24 @@ export default function AdminPanel() {
       } catch (e) {
         console.error(e);
       }
-    } else {
-      try {
-        const stored = localStorage.getItem("fityatra_orders");
-        let locals: Order[] = stored ? JSON.parse(stored) : [];
-        locals = locals.map(o => o.id === orderId ? { ...o, status, shippingPartner: partner, notes } : o);
-        localStorage.setItem("fityatra_orders", JSON.stringify(locals));
-      } catch (e) {
-        console.error(e);
-      }
     }
     
     setEditingOrder(null);
     loadOrdersFromStorage();
   };
 
-  const handleDeleteOrder = (orderId: string) => {
+  const handleDeleteOrder = async (orderId: string) => {
     if (!window.confirm(`Are you sure you want to delete order ${orderId}?`)) return;
 
-    const isPreseeded = PRESEEDED_ORDERS.some(o => o.id === orderId);
+    await deleteOrderInLib(orderId);
 
+    const isPreseeded = PRESEEDED_ORDERS.some(o => o.id === orderId);
     if (isPreseeded) {
       try {
         const stored = localStorage.getItem("fityatra_preseeded_orders");
         let preseeded: Order[] = stored ? JSON.parse(stored) : [...PRESEEDED_ORDERS];
         preseeded = preseeded.filter(o => o.id !== orderId);
         localStorage.setItem("fityatra_preseeded_orders", JSON.stringify(preseeded));
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      try {
-        const stored = localStorage.getItem("fityatra_orders");
-        let locals: Order[] = stored ? JSON.parse(stored) : [];
-        locals = locals.filter(o => o.id !== orderId);
-        localStorage.setItem("fityatra_orders", JSON.stringify(locals));
       } catch (e) {
         console.error(e);
       }

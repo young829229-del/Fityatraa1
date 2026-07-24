@@ -3,6 +3,7 @@ import { X, Plus, Minus, Trash2, Ticket, MapPin, ShoppingBag, ArrowRight, Shield
 import { CartItem, Product } from "../types";
 import { NEPAL_REGIONS } from "../data";
 import { loadPaymentSettings, PaymentSettings } from "../lib/paymentSettings";
+import { addOrder } from "../lib/orders";
 import { motion, AnimatePresence } from "motion/react";
 
 interface CartDrawerProps {
@@ -185,7 +186,7 @@ export default function CartDrawer({
         name: item.product.name,
         quantity: item.quantity,
       })),
-      status: "placed",
+      status: "placed" as const,
       createdAt: new Date().toLocaleString("en-US", {
         month: "long",
         day: "numeric",
@@ -199,14 +200,7 @@ export default function CartDrawer({
       screenshot: uploadedScreenshot || undefined,
     };
 
-    try {
-      const existing = localStorage.getItem("fityatra_orders");
-      const orderList = existing ? JSON.parse(existing) : [];
-      orderList.unshift(newOrder); // Add to beginning of history
-      localStorage.setItem("fityatra_orders", JSON.stringify(orderList));
-    } catch (err) {
-      console.error("Local storage order registration error", err);
-    }
+    addOrder(newOrder).catch((err) => console.error("Firestore order registration error", err));
 
     // Format WhatsApp Message & Auto-launch WhatsApp flow
     const itemStrings = cart.map((item, idx) => `${idx + 1}. ${item.product.name} (Qty: ${item.quantity})`).join("\n");

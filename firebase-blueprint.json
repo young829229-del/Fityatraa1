@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Fitness supplement or item in catalog",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 256 },
+        "brand": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 128 },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "discountPercentage": { "type": "number" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "isSoldOut": { "type": "boolean" },
+        "image": { "type": "string", "maxLength": 500000 },
+        "gallery": { "type": "array" },
+        "infoImages": { "type": "array" },
+        "description": { "type": "string", "maxLength": 10000 },
+        "servings": { "type": "string", "maxLength": 256 },
+        "servingSize": { "type": "string", "maxLength": 256 },
+        "goals": { "type": "array" },
+        "specs": { "type": "object" },
+        "nutritionFacts": { "type": "object" },
+        "variants": { "type": "array" },
+        "isBestSeller": { "type": "boolean" },
+        "verifiedCheckmark": { "type": "boolean" },
+        "authenticTag": { "type": "string", "maxLength": 256 },
+        "labReportUrl": { "type": "string", "maxLength": 5000 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "image"]
+    },
+    "PaymentSettings": {
+      "title": "PaymentSettings",
+      "description": "Global store payment settings and QR codes",
+      "type": "object",
+      "properties": {
+        "upiId": { "type": "string", "maxLength": 256 },
+        "upiName": { "type": "string", "maxLength": 256 },
+        "qrCodeImage": { "type": "string", "maxLength": 500000 },
+        "codEnabled": { "type": "boolean" },
+        "bankDetails": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Product review left by customer or verified buyer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "productId": { "type": "string", "maxLength": 128 },
+        "author": { "type": "string", "maxLength": 256 },
+        "rating": { "type": "number" },
+        "date": { "type": "string", "maxLength": 128 },
+        "verified": { "type": "boolean" },
+        "comment": { "type": "string", "maxLength": 5000 },
+        "likes": { "type": "number" },
+        "dislikes": { "type": "number" },
+        "userVote": { "type": "string" },
+        "snaps": { "type": "array" },
+        "flavor": { "type": "string", "maxLength": 128 },
+        "weight": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "productId", "rating", "author"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 256 },
+        "customerPhone": { "type": "string", "maxLength": 128 },
+        "address": { "type": "string", "maxLength": 2000 },
+        "paymentMethod": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "items", "totalAmount"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Product catalog"
+    },
+    "/settings/{settingsId}": {
+      "schema": "PaymentSettings",
+      "description": "Store settings"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Product reviews"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders"
+    }
+  }
+}

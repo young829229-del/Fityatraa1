@@ -1,4 +1,7 @@
 import { Product } from "../types";
+import { db } from "./firebase";
+import { collection, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { handleFirestoreError, OperationType } from "./firebaseError";
 
 export interface UserReview {
   id: string;
@@ -137,36 +140,105 @@ export const INITIAL_REVIEWS: UserReview[] = [
   }
 ];
 
-const LOCAL_STORAGE_KEY = "fityatra_product_reviews";
+const REVIEWS_LOCAL_STORAGE_KEY = "fityatra_product_reviews";
+const REVIEWS_COLLECTION = "reviews";
 
-export function loadAllReviews(): UserReview[] {
+let inMemoryReviews: UserReview[] | null = null;
+let isSubscribed = false;
+
+function subscribeToReviews() {
+  if (isSubscribed) return;
+  isSubscribed = true;
+
   try {
-    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!data) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_REVIEWS));
-      return INITIAL_REVIEWS;
-    }
-    return JSON.parse(data);
-  } catch (e) {
-    console.error("Failed to load reviews", e);
-    return INITIAL_REVIEWS;
+    const reviewsRef = collection(db, REVIEWS_COLLECTION);
+    onSnapshot(
+      reviewsRef,
+      (snapshot) => {
+        if (snapshot.empty) {
+          seedInitialReviews();
+          return;
+        }
+
+        const reviewsFromFS: UserReview[] = [];
+        snapshot.forEach((docSnap) => {
+          reviewsFromFS.push(docSnap.data() as UserReview);
+        });
+
+        inMemoryReviews = reviewsFromFS;
+        try {
+          localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(reviewsFromFS));
+        } catch (e) {
+          console.warn("Failed to write reviews to localStorage", e);
+        }
+        window.dispatchEvent(new Event("fityatra_reviews_updated"));
+      },
+      (error) => {
+        console.error("Firestore reviews subscription error:", error);
+      }
+    );
+  } catch (err) {
+    console.error("Failed to set up reviews listener:", err);
   }
 }
 
-export function saveAllReviews(reviews: UserReview[]) {
+async function seedInitialReviews() {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(reviews));
-    window.dispatchEvent(new Event("fityatra_reviews_updated"));
-
-    // Async server synchronization
-    fetch("/api/reviews", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(reviews),
-    }).catch((err) => console.error("Failed to sync reviews to server", err));
-  } catch (e) {
-    console.error("Failed to save reviews", e);
+    for (const rev of INITIAL_REVIEWS) {
+      const docRef = doc(db, REVIEWS_COLLECTION, rev.id);
+      await setDoc(docRef, rev);
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, REVIEWS_COLLECTION);
   }
+}
+
+subscribeToReviews();
+
+export function loadAllReviews(): UserReview[] {
+  if (inMemoryReviews && inMemoryReviews.length > 0) {
+    return inMemoryReviews;
+  }
+  try {
+    const data = localStorage.getItem(REVIEWS_LOCAL_STORAGE_KEY);
+    if (data) {
+      const parsed: UserReview[] = JSON.parse(data);
+      if (parsed && parsed.length > 0) {
+        inMemoryReviews = parsed;
+        return inMemoryReviews;
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse cached reviews", e);
+  }
+
+  inMemoryReviews = INITIAL_REVIEWS;
+  return inMemoryReviews;
+}
+
+export async function saveAllReviews(reviews: UserReview[]) {
+  inMemoryReviews = reviews;
+  try {
+    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(reviews));
+  } catch (e) {
+    console.warn("Failed to save reviews to localStorage", e);
+  }
+  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+
+  try {
+    for (const rev of reviews) {
+      const docRef = doc(db, REVIEWS_COLLECTION, rev.id);
+      await setDoc(docRef, rev, { merge: true });
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, REVIEWS_COLLECTION);
+  }
+
+  fetch("/api/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reviews),
+  }).catch((err) => console.error("Failed to sync reviews to server endpoint", err));
 }
 
 export function getProductReviews(productId: string): UserReview[] {
@@ -174,7 +246,7 @@ export function getProductReviews(productId: string): UserReview[] {
   return all.filter((r) => r.productId === productId);
 }
 
-export function addProductReview(productId: string, review: Omit<UserReview, "id" | "productId" | "date">): UserReview {
+export async function addProductReview(productId: string, review: Omit<UserReview, "id" | "productId" | "date">): Promise<UserReview> {
   const all = loadAllReviews();
   const newReview: UserReview = {
     ...review,
@@ -183,28 +255,92 @@ export function addProductReview(productId: string, review: Omit<UserReview, "id
     date: "Just now",
   };
   all.unshift(newReview);
-  saveAllReviews(all);
+
+  inMemoryReviews = all;
+  try {
+    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn("localStorage write failed", e);
+  }
+  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+
+  try {
+    const docRef = doc(db, REVIEWS_COLLECTION, newReview.id);
+    await setDoc(docRef, newReview);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, `${REVIEWS_COLLECTION}/${newReview.id}`);
+  }
+
+  fetch("/api/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(all),
+  }).catch((err) => console.error("Failed server backup sync for review", err));
+
   return newReview;
 }
 
-export function updateProductReview(reviewId: string, updatedFields: Partial<Omit<UserReview, "id" | "productId">>): UserReview | null {
+export async function updateProductReview(reviewId: string, updatedFields: Partial<Omit<UserReview, "id" | "productId">>): Promise<UserReview | null> {
   const all = loadAllReviews();
   const idx = all.findIndex((r) => r.id === reviewId);
   if (idx === -1) return null;
+
   const updatedReview = {
     ...all[idx],
     ...updatedFields,
   };
   all[idx] = updatedReview;
-  saveAllReviews(all);
+
+  inMemoryReviews = all;
+  try {
+    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn("localStorage write failed", e);
+  }
+  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+
+  try {
+    const docRef = doc(db, REVIEWS_COLLECTION, reviewId);
+    await setDoc(docRef, updatedReview, { merge: true });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, `${REVIEWS_COLLECTION}/${reviewId}`);
+  }
+
+  fetch("/api/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(all),
+  }).catch((err) => console.error("Failed server backup sync for review update", err));
+
   return updatedReview;
 }
 
-export function deleteProductReview(reviewId: string): boolean {
+export async function deleteProductReview(reviewId: string): Promise<boolean> {
   const all = loadAllReviews();
   const initialLen = all.length;
   const filtered = all.filter((r) => r.id !== reviewId);
-  saveAllReviews(filtered);
+
+  inMemoryReviews = filtered;
+  try {
+    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.warn("localStorage write failed", e);
+  }
+  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+
+  try {
+    const docRef = doc(db, REVIEWS_COLLECTION, reviewId);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `${REVIEWS_COLLECTION}/${reviewId}`);
+  }
+
+  fetch("/api/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(filtered),
+  }).catch((err) => console.error("Failed server backup sync for review delete", err));
+
   return filtered.length < initialLen;
 }
 
