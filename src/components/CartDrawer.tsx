@@ -6,6 +6,8 @@ import { loadPaymentSettings, PaymentSettings } from "../lib/paymentSettings";
 import { addOrder } from "../lib/orders";
 import { motion, AnimatePresence } from "motion/react";
 
+import { formatImageUrl } from "../lib/cacheBuster";
+
 interface CartDrawerProps {
   onClose: () => void;
   cart: CartItem[];
@@ -298,7 +300,7 @@ Sent via FitYatra Applet Dispatcher`;
                         {item.product.image && (item.product.image.startsWith("http") || item.product.image.startsWith("data:image/")) ? (
                           <img 
                             id={`cart-item-img-${item.product.id}`}
-                            src={item.product.image} 
+                            src={formatImageUrl(item.product.image, item.product.updatedAt)} 
                             alt={item.product.name} 
                             className="w-full h-full object-contain"
                             referrerPolicy="no-referrer"

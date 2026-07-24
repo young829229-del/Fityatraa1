@@ -2,6 +2,7 @@ import React from "react";
 import { Star, ShoppingCart, Eye, Sparkles, Heart } from "lucide-react";
 import { Product } from "../types";
 import { getProductStats } from "../lib/reviews";
+import { formatImageUrl } from "../lib/cacheBuster";
 
 interface ProductCardProps {
   product: Product;
@@ -27,7 +28,7 @@ export default function ProductCard({
       return (
         <div className="w-full aspect-square bg-[#FDFDFD] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden transition-all duration-300 select-none">
           <img
-            src={product.image}
+            src={formatImageUrl(product.image, product.updatedAt)}
             alt={product.name}
             className="max-w-full max-h-full object-contain transition-all duration-300 transform group-hover:scale-105 active:scale-95 duration-550"
           />

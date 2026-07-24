@@ -36,7 +36,7 @@ let inMemorySettings: PaymentSettings | null = null;
 let isSubscribed = false;
 
 function subscribeToPaymentSettings() {
-  if (isSubscribed) return;
+  if (isSubscribed || typeof window === "undefined") return;
   isSubscribed = true;
 
   try {
@@ -56,12 +56,16 @@ function subscribeToPaymentSettings() {
           ...data
         };
 
-        try {
-          localStorage.setItem(PAYMENT_SETTINGS_KEY, JSON.stringify(inMemorySettings));
-        } catch (e) {
-          console.warn("Failed to update payment settings cache", e);
+        if (typeof localStorage !== "undefined") {
+          try {
+            localStorage.setItem(PAYMENT_SETTINGS_KEY, JSON.stringify(inMemorySettings));
+          } catch (e) {
+            console.warn("Failed to update payment settings cache", e);
+          }
         }
-        window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
+        }
       },
       (error) => {
         console.error("Firestore payment settings listener error:", error);
@@ -87,31 +91,22 @@ export function loadPaymentSettings(): PaymentSettings {
   if (inMemorySettings) {
     return inMemorySettings;
   }
-  try {
-    const data = localStorage.getItem(PAYMENT_SETTINGS_KEY);
-    if (data) {
-      inMemorySettings = {
-        ...DEFAULT_PAYMENT_SETTINGS,
-        ...JSON.parse(data)
-      };
-      return inMemorySettings;
-    }
-  } catch (e) {
-    console.error("Failed to load payment settings from localStorage", e);
-  }
-
   inMemorySettings = DEFAULT_PAYMENT_SETTINGS;
   return inMemorySettings;
 }
 
 export async function savePaymentSettings(settings: PaymentSettings) {
   inMemorySettings = settings;
-  try {
-    localStorage.setItem(PAYMENT_SETTINGS_KEY, JSON.stringify(settings));
-  } catch (e) {
-    console.warn("Failed to write payment settings to localStorage", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(PAYMENT_SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn("Failed to write payment settings to localStorage", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
+  }
 
   // Save directly to Firestore for real-time live synchronization
   try {
@@ -122,9 +117,11 @@ export async function savePaymentSettings(settings: PaymentSettings) {
   }
 
   // Backup sync to server REST endpoint
-  fetch("/api/settings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(settings),
-  }).catch((err) => console.error("Failed to sync payment settings to server endpoint", err));
+  if (typeof window !== "undefined") {
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    }).catch((err) => console.error("Failed to sync payment settings to server endpoint", err));
+  }
 }

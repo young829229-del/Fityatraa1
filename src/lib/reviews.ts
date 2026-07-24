@@ -147,7 +147,7 @@ let inMemoryReviews: UserReview[] | null = null;
 let isSubscribed = false;
 
 function subscribeToReviews() {
-  if (isSubscribed) return;
+  if (isSubscribed || typeof window === "undefined") return;
   isSubscribed = true;
 
   try {
@@ -166,12 +166,16 @@ function subscribeToReviews() {
         });
 
         inMemoryReviews = reviewsFromFS;
-        try {
-          localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(reviewsFromFS));
-        } catch (e) {
-          console.warn("Failed to write reviews to localStorage", e);
+        if (typeof localStorage !== "undefined") {
+          try {
+            localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(reviewsFromFS));
+          } catch (e) {
+            console.warn("Failed to write reviews to localStorage", e);
+          }
         }
-        window.dispatchEvent(new Event("fityatra_reviews_updated"));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("fityatra_reviews_updated"));
+        }
       },
       (error) => {
         console.error("Firestore reviews subscription error:", error);
@@ -199,31 +203,22 @@ export function loadAllReviews(): UserReview[] {
   if (inMemoryReviews && inMemoryReviews.length > 0) {
     return inMemoryReviews;
   }
-  try {
-    const data = localStorage.getItem(REVIEWS_LOCAL_STORAGE_KEY);
-    if (data) {
-      const parsed: UserReview[] = JSON.parse(data);
-      if (parsed && parsed.length > 0) {
-        inMemoryReviews = parsed;
-        return inMemoryReviews;
-      }
-    }
-  } catch (e) {
-    console.error("Failed to parse cached reviews", e);
-  }
-
   inMemoryReviews = INITIAL_REVIEWS;
   return inMemoryReviews;
 }
 
 export async function saveAllReviews(reviews: UserReview[]) {
   inMemoryReviews = reviews;
-  try {
-    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(reviews));
-  } catch (e) {
-    console.warn("Failed to save reviews to localStorage", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(reviews));
+    } catch (e) {
+      console.warn("Failed to save reviews to localStorage", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  }
 
   try {
     for (const rev of reviews) {
@@ -234,11 +229,13 @@ export async function saveAllReviews(reviews: UserReview[]) {
     handleFirestoreError(err, OperationType.WRITE, REVIEWS_COLLECTION);
   }
 
-  fetch("/api/reviews", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(reviews),
-  }).catch((err) => console.error("Failed to sync reviews to server endpoint", err));
+  if (typeof window !== "undefined") {
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reviews),
+    }).catch((err) => console.error("Failed to sync reviews to server endpoint", err));
+  }
 }
 
 export function getProductReviews(productId: string): UserReview[] {
@@ -257,12 +254,16 @@ export async function addProductReview(productId: string, review: Omit<UserRevie
   all.unshift(newReview);
 
   inMemoryReviews = all;
-  try {
-    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(all));
-  } catch (e) {
-    console.warn("localStorage write failed", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+      console.warn("localStorage write failed", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  }
 
   try {
     const docRef = doc(db, REVIEWS_COLLECTION, newReview.id);
@@ -271,11 +272,13 @@ export async function addProductReview(productId: string, review: Omit<UserRevie
     handleFirestoreError(err, OperationType.WRITE, `${REVIEWS_COLLECTION}/${newReview.id}`);
   }
 
-  fetch("/api/reviews", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(all),
-  }).catch((err) => console.error("Failed server backup sync for review", err));
+  if (typeof window !== "undefined") {
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(all),
+    }).catch((err) => console.error("Failed server backup sync for review", err));
+  }
 
   return newReview;
 }
@@ -292,12 +295,16 @@ export async function updateProductReview(reviewId: string, updatedFields: Parti
   all[idx] = updatedReview;
 
   inMemoryReviews = all;
-  try {
-    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(all));
-  } catch (e) {
-    console.warn("localStorage write failed", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+      console.warn("localStorage write failed", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  }
 
   try {
     const docRef = doc(db, REVIEWS_COLLECTION, reviewId);
@@ -306,11 +313,13 @@ export async function updateProductReview(reviewId: string, updatedFields: Parti
     handleFirestoreError(err, OperationType.UPDATE, `${REVIEWS_COLLECTION}/${reviewId}`);
   }
 
-  fetch("/api/reviews", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(all),
-  }).catch((err) => console.error("Failed server backup sync for review update", err));
+  if (typeof window !== "undefined") {
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(all),
+    }).catch((err) => console.error("Failed server backup sync for review update", err));
+  }
 
   return updatedReview;
 }
@@ -321,12 +330,16 @@ export async function deleteProductReview(reviewId: string): Promise<boolean> {
   const filtered = all.filter((r) => r.id !== reviewId);
 
   inMemoryReviews = filtered;
-  try {
-    localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(filtered));
-  } catch (e) {
-    console.warn("localStorage write failed", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(REVIEWS_LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+    } catch (e) {
+      console.warn("localStorage write failed", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_reviews_updated"));
+  }
 
   try {
     const docRef = doc(db, REVIEWS_COLLECTION, reviewId);
@@ -335,11 +348,13 @@ export async function deleteProductReview(reviewId: string): Promise<boolean> {
     handleFirestoreError(err, OperationType.DELETE, `${REVIEWS_COLLECTION}/${reviewId}`);
   }
 
-  fetch("/api/reviews", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(filtered),
-  }).catch((err) => console.error("Failed server backup sync for review delete", err));
+  if (typeof window !== "undefined") {
+    fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(filtered),
+    }).catch((err) => console.error("Failed server backup sync for review delete", err));
+  }
 
   return filtered.length < initialLen;
 }

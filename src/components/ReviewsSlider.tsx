@@ -1,10 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Star, Check, Plus, X, Upload, Award } from "lucide-react";
-import { TESTIMONIALS } from "../data";
+import { loadAllReviews, addProductReview } from "../lib/reviews";
+
+function getReviewImage(review: any): string {
+  if (review.imgUrl) return review.imgUrl;
+  if (review.images && review.images.length > 0 && review.images[0]) return review.images[0];
+  return "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80";
+}
 
 export default function ReviewsSlider() {
-  const [testimonials, setTestimonials] = useState(TESTIMONIALS);
+  const [testimonials, setTestimonials] = useState<any[]>(() => loadAllReviews());
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const handleReviewsUpdate = () => {
+      setTestimonials(loadAllReviews());
+    };
+    window.addEventListener("fityatra_reviews_updated", handleReviewsUpdate);
+    return () => window.removeEventListener("fityatra_reviews_updated", handleReviewsUpdate);
+  }, []);
 
   // Modal open & form states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,24 +122,17 @@ export default function ReviewsSlider() {
   };
 
   // Form submission
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !comment.trim()) return;
 
-    // Build the newly crafted testimonial item
-    const newTestimonial = {
-      id: `custom-rev-${Date.now()}`,
+    await addProductReview("wellcore-creatine", {
       name: name.trim(),
       rating,
       comment: comment.trim(),
-      date: "Just now",
-      statusVerified: true,
-      imgUrl: imagePreview || "https://i.ibb.co/qw5FZw1/uy-NBmf-CIDi-mid.jpg", // default mock if empty
-    };
-
-    // Prepend the new testimonial to the list
-    const updated = [newTestimonial, ...testimonials];
-    setTestimonials(updated);
+      images: imagePreview ? [imagePreview] : [],
+      verified: true,
+    });
     
     // Focus the carousel immediately onto the user's gorgeous live review!
     setActiveIndex(0);
@@ -165,7 +172,7 @@ export default function ReviewsSlider() {
             className="w-[95px] sm:w-[130px] aspect-[3/4] opacity-40 scale-90 translate-x-3 transition-all duration-500 rounded-[2rem] shrink-0 overflow-hidden cursor-pointer border border-[#1A1A1A]/10 shadow-sm relative group bg-neutral-100"
           >
             <img 
-              src={testimonials[prevIdx].imgUrl} 
+              src={testimonials[prevIdx] ? getReviewImage(testimonials[prevIdx]) : ""} 
               alt="Previous customer report" 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               referrerPolicy="no-referrer"
@@ -178,7 +185,7 @@ export default function ReviewsSlider() {
             className="w-[160px] sm:w-[210px] aspect-[3/4] opacity-100 scale-100 transition-all duration-500 rounded-[2.2rem] shrink-0 overflow-hidden shadow-lg border-2 border-white relative z-10 bg-white"
           >
             <img 
-              src={activeReview.imgUrl} 
+              src={activeReview ? getReviewImage(activeReview) : ""} 
               alt="Active customer report" 
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
@@ -192,7 +199,7 @@ export default function ReviewsSlider() {
             className="w-[95px] sm:w-[130px] aspect-[3/4] opacity-40 scale-90 -translate-x-3 transition-all duration-500 rounded-[2rem] shrink-0 overflow-hidden cursor-pointer border border-[#1A1A1A]/10 shadow-sm relative group bg-neutral-100"
           >
             <img 
-              src={testimonials[nextIdx].imgUrl} 
+              src={testimonials[nextIdx] ? getReviewImage(testimonials[nextIdx]) : ""} 
               alt="Next customer report" 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               referrerPolicy="no-referrer"
@@ -214,7 +221,7 @@ export default function ReviewsSlider() {
               <Star 
                 key={s} 
                 className={`w-5 h-5 ${
-                  s < activeReview.rating 
+                  s < (activeReview?.rating || 5)
                     ? "fill-[#E2B600] text-[#E2B600]" 
                     : "text-neutral-300"
                 }`} 
@@ -224,7 +231,7 @@ export default function ReviewsSlider() {
 
           {/* Opinionated real comment text */}
           <p className="text-center text-base sm:text-[17px] font-sans font-normal text-neutral-800 leading-relaxed tracking-tight max-w-sm mx-auto px-2">
-            "{activeReview.comment}"
+            "{activeReview?.comment || ""}"
           </p>
 
           {/* Verified buyer name */}
@@ -233,7 +240,7 @@ export default function ReviewsSlider() {
               <Check className="w-2.5 h-2.5 stroke-[4.5]" />
             </span>
             <span className="text-sm font-semibold text-neutral-850 font-sans tracking-tight">
-              {activeReview.name}
+              {activeReview?.name || "Verified Buyer"}
             </span>
           </div>
         </div>

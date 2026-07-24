@@ -33,7 +33,7 @@ let inMemoryOrders: Order[] | null = null;
 let isSubscribed = false;
 
 export function subscribeToOrders(callback?: (orders: Order[]) => void) {
-  if (isSubscribed) return;
+  if (isSubscribed || typeof window === "undefined") return;
   isSubscribed = true;
 
   try {
@@ -47,13 +47,17 @@ export function subscribeToOrders(callback?: (orders: Order[]) => void) {
         });
 
         inMemoryOrders = ordersFromFS;
-        try {
-          localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(ordersFromFS));
-        } catch (e) {
-          console.warn("localStorage quota exceeded for orders cache", e);
+        if (typeof localStorage !== "undefined") {
+          try {
+            localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(ordersFromFS));
+          } catch (e) {
+            console.warn("localStorage quota exceeded for orders cache", e);
+          }
         }
 
-        window.dispatchEvent(new Event("fityatra_orders_updated"));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("fityatra_orders_updated"));
+        }
         if (callback) callback(ordersFromFS);
       },
       (error) => {
@@ -71,15 +75,6 @@ export function loadAllOrders(): Order[] {
   if (inMemoryOrders) {
     return inMemoryOrders;
   }
-  try {
-    const data = localStorage.getItem(ORDERS_LOCAL_STORAGE_KEY);
-    if (data) {
-      inMemoryOrders = JSON.parse(data);
-      return inMemoryOrders!;
-    }
-  } catch (e) {
-    console.error("Failed to parse cached orders", e);
-  }
   return [];
 }
 
@@ -88,12 +83,16 @@ export async function addOrder(order: Order): Promise<Order> {
   all.unshift(order);
   inMemoryOrders = all;
 
-  try {
-    localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(all));
-  } catch (e) {
-    console.warn("Failed to write order to localStorage", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+      console.warn("Failed to write order to localStorage", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_orders_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_orders_updated"));
+  }
 
   try {
     const docRef = doc(db, ORDERS_COLLECTION, order.id);
@@ -117,12 +116,16 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus, no
   };
   inMemoryOrders = all;
 
-  try {
-    localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(all));
-  } catch (e) {
-    console.warn("Failed to write updated order to localStorage", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(all));
+    } catch (e) {
+      console.warn("Failed to write updated order to localStorage", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_orders_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_orders_updated"));
+  }
 
   try {
     const docRef = doc(db, ORDERS_COLLECTION, orderId);
@@ -139,12 +142,16 @@ export async function deleteOrder(orderId: string): Promise<boolean> {
   const filtered = all.filter((o) => o.id !== orderId);
   inMemoryOrders = filtered;
 
-  try {
-    localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(filtered));
-  } catch (e) {
-    console.warn("Failed to update orders in localStorage", e);
+  if (typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(ORDERS_LOCAL_STORAGE_KEY, JSON.stringify(filtered));
+    } catch (e) {
+      console.warn("Failed to update orders in localStorage", e);
+    }
   }
-  window.dispatchEvent(new Event("fityatra_orders_updated"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("fityatra_orders_updated"));
+  }
 
   try {
     const docRef = doc(db, ORDERS_COLLECTION, orderId);

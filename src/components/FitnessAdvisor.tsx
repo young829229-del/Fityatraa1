@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Sparkles, Calculator, MessageSquare, Flame, Trophy, ChevronRight, CheckCircle, HelpCircle, ShoppingCart, UserCheck } from "lucide-react";
 import { Product } from "../types";
-import { PRODUCTS } from "../data";
+import { loadAllProducts } from "../lib/products";
 
 interface FitnessAdvisorProps {
   onClose: () => void;
@@ -54,12 +54,13 @@ export default function FitnessAdvisor({ onClose, onAddProductToCart }: FitnessA
 
     // Recommend specific product stack
     let recommendedProducts: Product[] = [];
+    const currentProducts = loadAllProducts();
     if (exerciseGoal === "muscle") {
-      recommendedProducts = PRODUCTS.filter(p => ["wellcore-creatine", "wellcore-whey", "muscleblaze-wrathx"].includes(p.id));
+      recommendedProducts = currentProducts.filter(p => ["wellcore-creatine", "wellcore-whey", "muscleblaze-wrathx"].includes(p.id));
     } else if (exerciseGoal === "cut") {
-      recommendedProducts = PRODUCTS.filter(p => ["wellcore-whey", "muscleblaze-fishoil"].includes(p.id));
+      recommendedProducts = currentProducts.filter(p => ["wellcore-whey", "muscleblaze-fishoil"].includes(p.id));
     } else {
-      recommendedProducts = PRODUCTS.filter(p => ["muscleblaze-fishoil", "hkvitals-collagen", "myfitness-pb"].includes(p.id));
+      recommendedProducts = currentProducts.filter(p => ["muscleblaze-fishoil", "hkvitals-collagen", "myfitness-pb"].includes(p.id));
     }
 
     setCalcResult({
@@ -84,43 +85,45 @@ export default function FitnessAdvisor({ onClose, onAddProductToCart }: FitnessA
       if (customQuery.trim().length > 0) {
         // Query analyzer
         const q = customQuery.toLowerCase();
+        const allProds = loadAllProducts();
         if (q.includes("creatine") || q.includes("power") || q.includes("strength")) {
           advice = "For boosting muscle ATP cell energy and maximizing physical explosiveness, we highly recommend adding Wellcore Micronised Creatine to your stack. Take 3g daily with zero-grit unflavoured powder. Consistent loading increases output by 15%!";
-          const prod = PRODUCTS.find(p => p.id === "wellcore-creatine");
+          const prod = allProds.find(p => p.id === "wellcore-creatine");
           if (prod) matchedProducts.push(prod);
         } else if (q.includes("protein") || q.includes("whey") || q.includes("lean")) {
           advice = "For raw muscle fiber protein synthesis, ISO-Whey Premium Isolate is your master supplement. Providing 27g of pure isolate whey protein with near-zero lactose and fat. Post-workout intake triggers immediate recovery cascades.";
-          const prod = PRODUCTS.find(p => p.id === "wellcore-whey");
+          const prod = allProds.find(p => p.id === "wellcore-whey");
           if (prod) matchedProducts.push(prod);
         } else if (q.includes("skin") || q.includes("hair") || q.includes("joint") || q.includes("collagen")) {
           advice = "For structural cell strength, dermal hydration, and hair restoration, the combination of HK Vitals Skin Radiance Collagen & MuscleBlaze Fish Oil is incredible. The enteric fish oil relieves knee friction, while marine collagen hydrates dry skin layers.";
-          const prod1 = PRODUCTS.find(p => p.id === "hkvitals-collagen");
-          const prod2 = PRODUCTS.find(p => p.id === "muscleblaze-fishoil");
+          const prod1 = allProds.find(p => p.id === "hkvitals-collagen");
+          const prod2 = allProds.find(p => p.id === "muscleblaze-fishoil");
           if (prod1) matchedProducts.push(prod1);
           if (prod2) matchedProducts.push(prod2);
         } else {
           advice = "Welcome to your FitYatra Plan! For balanced health, we recommend combining Omega 3 Fish Oil (1 capsule daily for joint fluids) with Wellcore Micronised Creatine (3g for cell hydration and raw stamina). These form the baseline foundation for active physical lifters in Nepal.";
-          const prod = PRODUCTS.find(p => p.id === "muscleblaze-fishoil");
+          const prod = allProds.find(p => p.id === "muscleblaze-fishoil");
           if (prod) matchedProducts.push(prod);
         }
       } else {
         // Dropdown based
+        const allProds = loadAllProducts();
         if (selectedGoal === "gain_mass") {
           advice = "CRITICAL MASS STACK REC: Set surplus calorie goals. Take 1 scoop of Premium ISO-Whey (27g Protein) within 30 mins of weight training to start protein repair. Accompany with 3g Wellcore Creatine daily to hydrate muscle cells and boost ATP lift capacities.";
-          const p1 = PRODUCTS.find(p => p.id === "wellcore-whey");
-          const p2 = PRODUCTS.find(p => p.id === "wellcore-creatine");
+          const p1 = allProds.find(p => p.id === "wellcore-whey");
+          const p2 = allProds.find(p => p.id === "wellcore-creatine");
           if (p1) matchedProducts.push(p1);
           if (p2) matchedProducts.push(p2);
         } else if (selectedGoal === "weight_loss") {
           advice = "LEAN DEFICIT STACK REC: Prioritize high-protein low calories. Our cold-filtered ISO-Whey Isolate supplies 27g of pure amino acids with only 118 calories. Taking Fish Oil Gold (900mg Active Omega 3) supports metabolic lipid burn and reduces diet-induced join soreness.";
-          const p1 = PRODUCTS.find(p => p.id === "wellcore-whey");
-          const p2 = PRODUCTS.find(p => p.id === "muscleblaze-fishoil");
+          const p1 = allProds.find(p => p.id === "wellcore-whey");
+          const p2 = allProds.find(p => p.id === "muscleblaze-fishoil");
           if (p1) matchedProducts.push(p1);
           if (p2) matchedProducts.push(p2);
         } else {
           advice = "ACTIVE WELLNESS STACK REC: Secure structural health first. Take 1 softgel of Triple Strength Omega-3 Gold daily for cardiovascular integrity and cartilage flexibility. Pair with MyFitness Peanut Butter as a clean source of calorie fats and dietary fiber.";
-          const p1 = PRODUCTS.find(p => p.id === "muscleblaze-fishoil");
-          const p2 = PRODUCTS.find(p => p.id === "myfitness-pb");
+          const p1 = allProds.find(p => p.id === "muscleblaze-fishoil");
+          const p2 = allProds.find(p => p.id === "myfitness-pb");
           if (p1) matchedProducts.push(p1);
           if (p2) matchedProducts.push(p2);
         }
@@ -424,7 +427,7 @@ export default function FitnessAdvisor({ onClose, onAddProductToCart }: FitnessA
                   <div>
                     <h4 className="text-xs font-mono font-bold text-gray-700 uppercase tracking-widest mb-2">MATCHED SUPPLEMENTS AVAILABLE</h4>
                     <div className="space-y-3">
-                      {PRODUCTS.filter(p => {
+                      {loadAllProducts().filter(p => {
                         if (selectedGoal === "gain_mass") return ["wellcore-whey", "wellcore-creatine"].includes(p.id);
                         if (selectedGoal === "weight_loss") return ["wellcore-whey", "muscleblaze-fishoil"].includes(p.id);
                         return ["muscleblaze-fishoil", "hkvitals-collagen"].includes(p.id);

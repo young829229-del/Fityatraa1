@@ -12,73 +12,79 @@ import OrderTracker from "./components/OrderTracker";
 import AdminPanel from "./components/AdminPanel";
 import PolicyModal from "./components/PolicyModal";
 
-import { PRODUCTS } from "./data";
 import { Product, CartItem } from "./types";
-import { loadAllProducts, saveProductsFromServer } from "./lib/products";
+import { loadAllProducts } from "./lib/products";
+import { collection, doc, onSnapshot } from "firebase/firestore";
+import { db } from "./lib/firebase";
+import { PaymentSettings, DEFAULT_PAYMENT_SETTINGS, loadPaymentSettings } from "./lib/paymentSettings";
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>(() => loadAllProducts());
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(() => loadPaymentSettings());
 
   useEffect(() => {
+    // 1. Direct real-time Firestore listener for products
+    const productsRef = collection(db, "products");
+    const unsubscribeProducts = onSnapshot(
+      productsRef,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const fetchedProducts: Product[] = [];
+          snapshot.forEach((docSnap) => {
+            fetchedProducts.push(docSnap.data() as Product);
+          });
+          setProducts(fetchedProducts);
+        }
+      },
+      (error) => {
+        console.error("Firestore products snapshot listener error:", error);
+      }
+    );
+
+    // 2. Direct real-time Firestore listener for payment settings
+    const settingsRef = doc(db, "settings", "payment");
+    const unsubscribeSettings = onSnapshot(
+      settingsRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setPaymentSettings({
+            ...DEFAULT_PAYMENT_SETTINGS,
+            ...(docSnap.data() as PaymentSettings),
+          });
+        }
+      },
+      (error) => {
+        console.error("Firestore settings snapshot listener error:", error);
+      }
+    );
+
     const handleProductsChange = () => {
       setProducts(loadAllProducts());
     };
-    window.addEventListener("fityatra_products_updated", handleProductsChange);
-    return () => window.removeEventListener("fityatra_products_updated", handleProductsChange);
-  }, []);
-
-  useEffect(() => {
-    const synchronizeWithServer = async () => {
-      try {
-        const settingsRes = await fetch(`/api/settings?t=${Date.now()}`, {
-          headers: {
-            "Cache-Control": "no-cache",
-            "Pragma": "no-cache"
-          }
-        });
-        if (settingsRes.ok) {
-          const settingsData = await settingsRes.json();
-          localStorage.setItem("fityatra_payment_settings", JSON.stringify(settingsData));
-          window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
-        }
-      } catch (err) {
-        console.warn("Could not sync settings from server on boot", err);
-      }
-
-      try {
-        const productsRes = await fetch(`/api/products?t=${Date.now()}`, {
-          headers: {
-            "Cache-Control": "no-cache",
-            "Pragma": "no-cache"
-          }
-        });
-        if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          saveProductsFromServer(productsData);
-        }
-      } catch (err) {
-        console.warn("Could not sync products from server on boot", err);
-      }
-
-      try {
-        const reviewsRes = await fetch(`/api/reviews?t=${Date.now()}`, {
-          headers: {
-            "Cache-Control": "no-cache",
-            "Pragma": "no-cache"
-          }
-        });
-        if (reviewsRes.ok) {
-          const reviewsData = await reviewsRes.json();
-          localStorage.setItem("fityatra_product_reviews", JSON.stringify(reviewsData));
-          window.dispatchEvent(new Event("fityatra_reviews_updated"));
-        }
-      } catch (err) {
-        console.warn("Could not sync reviews from server on boot", err);
-      }
+    const handleSettingsChange = () => {
+      setPaymentSettings(loadPaymentSettings());
     };
 
-    synchronizeWithServer();
+    window.addEventListener("fityatra_products_updated", handleProductsChange);
+    window.addEventListener("fityatra_payment_settings_updated", handleSettingsChange);
+
+    return () => {
+      unsubscribeProducts();
+      unsubscribeSettings();
+      window.removeEventListener("fityatra_products_updated", handleProductsChange);
+      window.removeEventListener("fityatra_payment_settings_updated", handleSettingsChange);
+    };
   }, []);
+
+  // Sync selected product details when product list updates
+  useEffect(() => {
+    if (selectedProductDetails) {
+      const updated = products.find((p) => p.id === selectedProductDetails.id);
+      if (updated) {
+        setSelectedProductDetails(updated);
+      }
+    }
+  }, [products]);
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {

@@ -6,11 +6,11 @@ import {
   Upload, Image as ImageIcon
 } from "lucide-react";
 import { loadAllReviews, saveAllReviews, UserReview, deleteProductReview, updateProductReview, addProductReview } from "../lib/reviews";
-import { PRODUCTS } from "../data";
 import { loadAllProducts, saveAllProducts, addProduct as addProductToLib, updateProduct as updateProductInLib, deleteProduct as deleteProductFromLib } from "../lib/products";
 import { loadPaymentSettings, savePaymentSettings, PaymentSettings } from "../lib/paymentSettings";
 import { loadAllOrders, updateOrderStatus, deleteOrder as deleteOrderInLib, addOrder as addOrderInLib, Order, OrderItem } from "../lib/orders";
 import { Product } from "../types";
+import { formatImageUrl } from "../lib/cacheBuster";
 
 const PRESEEDED_ORDERS: Order[] = [
   {
@@ -325,12 +325,23 @@ export default function AdminPanel() {
   const [editingReview, setEditingReview] = useState<UserReview | null>(null);
 
   // New review state
-  const [newRevProduct, setNewRevProduct] = useState(PRODUCTS[0]?.id || "");
+  const [newRevProduct, setNewRevProduct] = useState("");
   const [newRevName, setNewRevName] = useState("");
   const [newRevRating, setNewRevRating] = useState(5);
   const [newRevComment, setNewRevComment] = useState("");
   const [newRevImages, setNewRevImages] = useState<string[]>([]);
   const [showAddReviewForm, setShowAddReviewForm] = useState(false);
+
+  // Global helper to trigger real-time data refresh event across clients
+  const triggerGlobalDataRefresh = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("fityatra_data_refreshed"));
+      window.dispatchEvent(new Event("fityatra_products_updated"));
+      window.dispatchEvent(new Event("fityatra_payment_settings_updated"));
+      window.dispatchEvent(new Event("fityatra_reviews_updated"));
+      window.dispatchEvent(new Event("fityatra_orders_updated"));
+    }
+  };
 
   // Load orders, reviews, and dynamic products with real-time updates
   useEffect(() => {
@@ -338,11 +349,18 @@ export default function AdminPanel() {
     const handleSettings = () => setPaymentSettings(loadPaymentSettings());
     const handleReviews = () => setReviews(loadAllReviews());
     const handleOrders = () => loadOrdersFromStorage();
+    const handleGlobalDataRefresh = () => {
+      handleProducts();
+      handleSettings();
+      handleReviews();
+      handleOrders();
+    };
 
     window.addEventListener("fityatra_products_updated", handleProducts);
     window.addEventListener("fityatra_payment_settings_updated", handleSettings);
     window.addEventListener("fityatra_reviews_updated", handleReviews);
     window.addEventListener("fityatra_orders_updated", handleOrders);
+    window.addEventListener("fityatra_data_refreshed", handleGlobalDataRefresh);
 
     handleProducts();
     handleSettings();
@@ -354,6 +372,7 @@ export default function AdminPanel() {
       window.removeEventListener("fityatra_payment_settings_updated", handleSettings);
       window.removeEventListener("fityatra_reviews_updated", handleReviews);
       window.removeEventListener("fityatra_orders_updated", handleOrders);
+      window.removeEventListener("fityatra_data_refreshed", handleGlobalDataRefresh);
     };
   }, []);
 
@@ -443,6 +462,7 @@ export default function AdminPanel() {
     
     setEditingOrder(null);
     loadOrdersFromStorage();
+    triggerGlobalDataRefresh();
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -463,6 +483,7 @@ export default function AdminPanel() {
     }
 
     loadOrdersFromStorage();
+    triggerGlobalDataRefresh();
   };
 
   // Reviews operations
@@ -470,17 +491,20 @@ export default function AdminPanel() {
     if (!window.confirm("Are you sure you want to delete this custom review?")) return;
     deleteProductReview(reviewId);
     setReviews(loadAllReviews());
+    triggerGlobalDataRefresh();
   };
 
   const handleToggleVerifiedReview = (reviewId: string, currentStatus: boolean) => {
     updateProductReview(reviewId, { verified: !currentStatus });
     setReviews(loadAllReviews());
+    triggerGlobalDataRefresh();
   };
 
   const handleUpdateReviewCommentInPanel = (reviewId: string, comment: string, rating: number) => {
     updateProductReview(reviewId, { comment, rating });
     setEditingReview(null);
     setReviews(loadAllReviews());
+    triggerGlobalDataRefresh();
   };
 
   const handleCreateCustomReview = (e: React.FormEvent) => {
@@ -509,6 +533,7 @@ export default function AdminPanel() {
     setNewRevImages([]);
     setReviews(loadAllReviews());
     setShowAddReviewForm(false);
+    triggerGlobalDataRefresh();
   };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -543,24 +568,28 @@ export default function AdminPanel() {
     setAddGallery([]);
     setAddInfoImages([]);
     setShowAddProductForm(false);
+    triggerGlobalDataRefresh();
   };
 
   const handleUpdateProduct = (id: string, fields: Partial<Product>) => {
     updateProductInLib(id, fields);
     setProducts(loadAllProducts());
     setEditingProduct(null);
+    triggerGlobalDataRefresh();
   };
 
   const handleDeleteProduct = (id: string) => {
     if (!window.confirm("Are you sure you want to delete this product? This action is permanent and will remove it from the catalog.")) return;
     deleteProductFromLib(id);
     setProducts(loadAllProducts());
+    triggerGlobalDataRefresh();
   };
 
   // Payment Settings operations
   const handleSavePaymentSettings = (updated: PaymentSettings) => {
     savePaymentSettings(updated);
     setPaymentSettings(updated);
+    triggerGlobalDataRefresh();
   };
 
   // Stats calculators
@@ -1178,7 +1207,7 @@ export default function AdminPanel() {
                       onChange={(e) => setNewRevProduct(e.target.value)}
                       className="w-full p-2 border border-neutral-300 bg-white"
                     >
-                      {PRODUCTS.map(p => (
+                      {products.map(p => (
                         <option key={p.id} value={p.id}>{p.brand} - {p.name}</option>
                       ))}
                     </select>
@@ -1269,7 +1298,7 @@ export default function AdminPanel() {
                 </p>
               ) : (
                 filteredReviews.map((rev) => {
-                  const productObj = PRODUCTS.find((p) => p.id === rev.productId);
+                  const productObj = products.find((p) => p.id === rev.productId);
                   return (
                     <div key={rev.id} className="border border-neutral-250 p-4 space-y-3 bg-neutral-50/50 flex flex-col justify-between">
                       <div className="space-y-1.5">
@@ -1458,7 +1487,7 @@ export default function AdminPanel() {
                   <div key={prod.id} className="border border-neutral-200 p-4 hover:border-black transition-colors flex gap-4 bg-neutral-50/20 flex-col sm:flex-row justify-between">
                     <div className="flex gap-4 flex-1">
                       <img 
-                        src={prod.image || "https://placehold.co/100"} 
+                        src={formatImageUrl(prod.image, prod.updatedAt) || "https://placehold.co/100"} 
                         alt={prod.name} 
                         className="w-16 h-16 object-contain bg-white border border-neutral-200 p-1 shrink-0 align-middle self-start" 
                         onError={(e) => {

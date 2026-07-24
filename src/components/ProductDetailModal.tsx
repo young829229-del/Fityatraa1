@@ -14,6 +14,8 @@ import {
   UserReview
 } from "../lib/reviews";
 
+import { formatImageUrl } from "../lib/cacheBuster";
+
 interface ProductDetailModalProps {
   product: Product;
   onClose: () => void;
@@ -42,6 +44,14 @@ export default function ProductDetailModal({
 
   // Custom reviews states
   const [reviewsList, setReviewsList] = useState<UserReview[]>(() => getProductReviews(product.id));
+
+  React.useEffect(() => {
+    const handleReviewsUpdate = () => {
+      setReviewsList(getProductReviews(product.id));
+    };
+    window.addEventListener("fityatra_reviews_updated", handleReviewsUpdate);
+    return () => window.removeEventListener("fityatra_reviews_updated", handleReviewsUpdate);
+  }, [product.id]);
   const [newReviewName, setNewReviewName] = useState("");
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewComment, setNewReviewComment] = useState("");
@@ -390,7 +400,12 @@ export default function ProductDetailModal({
               title="Swipe left/right on mobile"
             >
               <img 
-                src={album[activeImageIndex] && (album[activeImageIndex].startsWith("http") || album[activeImageIndex].startsWith("data:image")) ? album[activeImageIndex] : product.image} 
+                src={formatImageUrl(
+                  album[activeImageIndex] && (album[activeImageIndex].startsWith("http") || album[activeImageIndex].startsWith("data:image"))
+                    ? album[activeImageIndex]
+                    : product.image,
+                  product.updatedAt
+                )} 
                 alt={`${product.brand} ${product.name}`} 
                 className="max-w-full max-h-full object-contain" 
                 onError={(e) => {
@@ -451,7 +466,7 @@ export default function ProductDetailModal({
                         : 'border-neutral-200 hover:border-neutral-400'
                     }`}
                   >
-                    <img src={imgUrl} alt="Thumbnail view" className="w-full h-full object-contain p-0.5" />
+                    <img src={formatImageUrl(imgUrl, product.updatedAt)} alt="Thumbnail view" className="w-full h-full object-contain p-0.5" />
                   </button>
                 ))}
               </div>

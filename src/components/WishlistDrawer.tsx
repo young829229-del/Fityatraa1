@@ -1,6 +1,7 @@
 import React from "react";
 import { X, Heart, ShoppingCart, Trash2, Sparkles, AlertCircle } from "lucide-react";
 import { Product } from "../types";
+import { formatImageUrl } from "../lib/cacheBuster";
 
 interface WishlistDrawerProps {
   onClose: () => void;
@@ -85,7 +86,7 @@ export default function WishlistDrawer({
                     >
                       {prod.image.startsWith("http") || prod.image.startsWith("data:image/") ? (
                         <img
-                          src={prod.image}
+                          src={formatImageUrl(prod.image, prod.updatedAt)}
                           alt={prod.name}
                           className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         />

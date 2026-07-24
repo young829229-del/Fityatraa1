@@ -28,6 +28,7 @@ export interface Product {
   gallery?: string[];
   infoImages?: string[];
   variants?: ProductVariant[];
+  updatedAt?: number;
 }
 
 export interface CartItem {
